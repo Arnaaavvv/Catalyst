@@ -67,12 +67,23 @@ export default function TodayView({ state, actions }: { state: LifeOSState; acti
               const done = h.history.find((x) => x.date === today)?.done;
               const streak = habitStreak(h);
               return (
-                <button key={h.id} onClick={() => actions.logHabit(h.id, today)}
-                  className="row-hover flex items-center gap-2 px-2.5 py-2 rounded-lg text-left">
+                <div
+                  key={h.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => actions.logHabit(h.id, today)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      actions.logHabit(h.id, today);
+                    }
+                  }}
+                  className="row-hover flex items-center gap-2 px-2.5 py-2 rounded-lg text-left cursor-pointer"
+                >
                   <TaskCheck done={!!done} onClick={() => actions.logHabit(h.id, today)} />
                   <span className="text-xs flex-1">{h.name}</span>
                   {streak > 0 && <span className="font-mono text-[10px] flex items-center gap-0.5" style={{ color: "var(--habits)" }}><Flame size={10} />{streak}</span>}
-                </button>
+                </div>
               );
             })}
           </div>
