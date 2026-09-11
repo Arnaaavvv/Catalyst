@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { loadState, saveState } from "@/lib/storage";
-import { buildSeed } from "@/lib/seed";
+import { buildEmptyState, buildExampleTemplate } from "@/lib/seed";
 import { todayISO, uid, isoOf } from "@/lib/date";
 import type { LifeOSState, Priority, QuickAddResult } from "@/lib/types";
 
@@ -15,6 +15,9 @@ export interface LifeOSActions {
   logHealth: (vals: Record<string, number>) => void;
   toggleMilestone: (goalId: string, msId: string) => void;
   addGoal: (title: string, deadline: string) => void;
+  addHabit: (name: string, target: number, unit: string, linkedGoalId: string | null) => void;
+  addSubject: (name: string) => void;
+  loadExampleTemplate: () => void;
   commitQuickAdd: (parsed: QuickAddResult) => void;
 }
 
@@ -24,16 +27,18 @@ export function useLifeOSStore(userId: string) {
   const [saveError, setSaveError] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load this user's data from browser cache, seeding it the first time.
+  // Load this user's data from browser cache. A brand-new account starts
+  // completely empty — the example template is opt-in only (see
+  // loadExampleTemplate below), never applied automatically.
   useEffect(() => {
     setLoading(true);
     const existing = loadState(userId);
     if (existing) {
       setState(existing);
     } else {
-      const seeded = buildSeed();
-      setState(seeded);
-      saveState(userId, seeded);
+      const blank = buildEmptyState();
+      setState(blank);
+      saveState(userId, blank);
     }
     setLoading(false);
   }, [userId]);
@@ -104,6 +109,21 @@ export function useLifeOSStore(userId: string) {
         linkedHabitIds: [], linkedTaskIds: [],
       }],
     }),
+
+    addHabit: (name, target, unit, linkedGoalId) => setState((s) => s && {
+      ...s,
+      habits: [...s.habits, { id: uid("hab"), name, domain: "habits" as const, target, unit, linkedGoalId, history: [] }],
+    }),
+
+    addSubject: (name) => setState((s) => s && {
+      ...s,
+      subjects: [...s.subjects, { id: uid("sub"), name, color: "var(--academics)" }],
+    }),
+
+    // Overwrites current data with the fully-populated example dataset.
+    // Deliberately a hard replace, not a merge — this is meant for someone
+    // exploring the app, not for mixing demo data into real tracking.
+    loadExampleTemplate: () => setState(() => buildExampleTemplate()),
 
     commitQuickAdd: (parsed) => setState((s) => {
       if (!s) return s;

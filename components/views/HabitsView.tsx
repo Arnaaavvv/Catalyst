@@ -1,9 +1,10 @@
 "use client";
-import { Flame, Link2 } from "lucide-react";
+import { useState } from "react";
+import { Flame, Link2, Plus, X } from "lucide-react";
 import { habitRate, habitStreak, habitMomentum, domainMomentum, MOMENTUM_META } from "@/lib/derived";
 import { todayISO } from "@/lib/date";
 import MomentumDial from "@/components/shared/MomentumDial";
-import { SectionHeader, TaskCheck } from "@/components/shared/Primitives";
+import { SectionHeader, TaskCheck, EmptyState, inputCls, FieldLabel } from "@/components/shared/Primitives";
 import { DOMAINS } from "@/lib/domains";
 import type { Habit, LifeOSState } from "@/lib/types";
 import type { LifeOSActions } from "@/hooks/useLifeOSStore";
@@ -21,48 +22,110 @@ function HabitHistoryRow({ habit }: { habit: Habit }) {
 }
 
 export default function HabitsView({ state, actions }: { state: LifeOSState; actions: LifeOSActions }) {
+  const [newHabitOpen, setNewHabitOpen] = useState(false);
   const mom = domainMomentum("habits", state);
+  const hasHabits = state.habits.length > 0;
+
   return (
     <div className="fade-in">
-      <SectionHeader eyebrow="RECURRING · STREAKS · TARGETS" title="Habits" />
+      <SectionHeader eyebrow="RECURRING · STREAKS · TARGETS" title="Habits"
+        action={<button onClick={() => setNewHabitOpen(true)} className="btn-primary text-xs px-3 py-2 rounded-lg flex items-center gap-1.5"><Plus size={13} /> New habit</button>} />
 
-      <div className="surface rounded-xl p-4 mb-5 flex items-center gap-5">
-        <MomentumDial state={mom.state} color="var(--habits)" size={64} />
-        <div>
-          <div className="font-mono text-[10px] text-faint tracking-wide mb-1">HABITS MOMENTUM</div>
-          <div className="text-xs text-dim max-w-md">Trailing 7-day completion rate vs. the 7 days before that, averaged across all habits.</div>
-        </div>
-      </div>
+      {!hasHabits ? (
+        <EmptyState icon={Flame} title="No habits yet"
+          hint={'Add your first one with "New habit" above — daily reading, workouts, whatever you want to build a streak on.'} />
+      ) : (
+        <>
+          <div className="surface rounded-xl p-4 mb-5 flex items-center gap-5">
+            <MomentumDial state={mom.state} color="var(--habits)" size={64} />
+            <div>
+              <div className="font-mono text-[10px] text-faint tracking-wide mb-1">HABITS MOMENTUM</div>
+              <div className="text-xs text-dim max-w-md">Trailing 7-day completion rate vs. the 7 days before that, averaged across all habits.</div>
+            </div>
+          </div>
 
-      <div className="space-y-2.5">
-        {state.habits.map((h) => {
-          const rate = habitRate(h, 14);
-          const streak = habitStreak(h);
-          const linkedGoal = state.goals.find((g) => g.id === h.linkedGoalId);
-          const hm = habitMomentum(h);
-          const doneToday = h.history.find((x) => x.date === todayISO())?.done;
-          return (
-            <div key={h.id} className="surface rounded-xl p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <TaskCheck done={!!doneToday} onClick={() => actions.logHabit(h.id, todayISO())} />
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium">{h.name}</div>
-                  <div className="font-mono text-[10px] text-faint mt-0.5">
-                    target {h.target} {h.unit} {linkedGoal && <>· <Link2 size={9} className="inline mb-0.5" /> {linkedGoal.title}</>}
+          <div className="space-y-2.5">
+            {state.habits.map((h) => {
+              const rate = habitRate(h, 14);
+              const streak = habitStreak(h);
+              const linkedGoal = state.goals.find((g) => g.id === h.linkedGoalId);
+              const hm = habitMomentum(h);
+              const doneToday = h.history.find((x) => x.date === todayISO())?.done;
+              return (
+                <div key={h.id} className="surface rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <TaskCheck done={!!doneToday} onClick={() => actions.logHabit(h.id, todayISO())} />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium">{h.name}</div>
+                      <div className="font-mono text-[10px] text-faint mt-0.5">
+                        target {h.target} {h.unit} {linkedGoal && <>· <Link2 size={9} className="inline mb-0.5" /> {linkedGoal.title}</>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 font-mono text-xs" style={{ color: DOMAINS.habits.color }}>
+                      <Flame size={13} /> {streak}
+                    </div>
+                    <span className="chip" style={{ color: hm.state === "stalled" ? "var(--tasks)" : "var(--ink-dim)" }}>{MOMENTUM_META[hm.state].label}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <HabitHistoryRow habit={h} />
+                    <span className="font-mono text-[11px] text-faint">{Math.round(rate * 100)}% · 14d</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 font-mono text-xs" style={{ color: DOMAINS.habits.color }}>
-                  <Flame size={13} /> {streak}
-                </div>
-                <span className="chip" style={{ color: hm.state === "stalled" ? "var(--tasks)" : "var(--ink-dim)" }}>{MOMENTUM_META[hm.state].label}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <HabitHistoryRow habit={h} />
-                <span className="font-mono text-[11px] text-faint">{Math.round(rate * 100)}% · 14d</span>
-              </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {newHabitOpen && <NewHabitModal state={state} actions={actions} onClose={() => setNewHabitOpen(false)} />}
+    </div>
+  );
+}
+
+function NewHabitModal({ state, actions, onClose }: { state: LifeOSState; actions: LifeOSActions; onClose: () => void }) {
+  const [name, setName] = useState("");
+  const [target, setTarget] = useState(4);
+  const [unit, setUnit] = useState("days/wk");
+  const [linkedGoalId, setLinkedGoalId] = useState<string>("");
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 modal-backdrop" style={{ background: "rgba(20,18,12,0.5)" }} onMouseDown={onClose}>
+      <div className="modal-panel surface rounded-2xl p-5 w-full max-w-[400px]" onMouseDown={(e) => e.stopPropagation()} style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}>
+        <div className="flex items-center justify-between mb-4">
+          <span className="font-display text-lg">New habit</span>
+          <button onClick={onClose}><X size={16} className="text-faint" /></button>
+        </div>
+        <div className="space-y-3">
+          <div>
+            <FieldLabel>Name</FieldLabel>
+            <input autoFocus className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Read 20 minutes" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <FieldLabel>Target</FieldLabel>
+              <input type="number" min={1} className={inputCls} value={target} onChange={(e) => setTarget(+e.target.value)} />
             </div>
-          );
-        })}
+            <div>
+              <FieldLabel>Unit</FieldLabel>
+              <input className={inputCls} value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="days/wk" />
+            </div>
+          </div>
+          {state.goals.length > 0 && (
+            <div>
+              <FieldLabel>Link to a goal (optional)</FieldLabel>
+              <select className={inputCls} value={linkedGoalId} onChange={(e) => setLinkedGoalId(e.target.value)}>
+                <option value="">None</option>
+                {state.goals.map((g) => <option key={g.id} value={g.id}>{g.title}</option>)}
+              </select>
+            </div>
+          )}
+        </div>
+        <button
+          onClick={() => { if (name.trim()) { actions.addHabit(name.trim(), target, unit, linkedGoalId || null); onClose(); } }}
+          className="btn-primary w-full mt-4 py-2.5 rounded-lg text-sm"
+        >
+          Create habit
+        </button>
       </div>
     </div>
   );

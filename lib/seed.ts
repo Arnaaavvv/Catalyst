@@ -31,8 +31,11 @@ function genHealthHistory(days: number): HealthLog[] {
   return out;
 }
 
-// Builds a realistic seeded dataset so a brand-new account feels alive immediately.
-export function buildSeed(): LifeOSState {
+// Builds a realistic seeded dataset so someone can explore a fully-populated
+// Life OS before deciding to use it for real. New accounts do NOT get this by
+// default — see buildEmptyState() below for what a fresh sign-up actually
+// starts with.
+export function buildExampleTemplate(): LifeOSState {
   const subjects: Subject[] = [
     { id: "sub_ml", name: "Machine Learning", color: "var(--academics)" },
     { id: "sub_os", name: "Operating Systems", color: "var(--academics)" },
@@ -128,4 +131,19 @@ export function buildSeed(): LifeOSState {
   const healthLogs = genHealthHistory(30);
 
   return { subjects, assignments, studySessions, goals, habits, tasks, healthLogs };
+}
+
+// What every new account actually starts with: nothing. The person fills in
+// their own subjects, goals, habits, and tasks from a blank slate — the
+// example template above is only ever loaded if they explicitly ask for it.
+export function buildEmptyState(): LifeOSState {
+  return {
+    subjects: [],
+    assignments: [],
+    studySessions: [],
+    goals: [],
+    habits: [],
+    tasks: [],
+    healthLogs: [],
+  };
 }

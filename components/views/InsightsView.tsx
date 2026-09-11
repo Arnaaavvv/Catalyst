@@ -1,9 +1,10 @@
 "use client";
 import { useMemo } from "react";
+import { Sparkles } from "lucide-react";
 import { todayISO, daysBetween } from "@/lib/date";
 import { domainMomentum, habitRate, goalProgress } from "@/lib/derived";
 import MomentumDial from "@/components/shared/MomentumDial";
-import { SectionHeader } from "@/components/shared/Primitives";
+import { SectionHeader, EmptyState } from "@/components/shared/Primitives";
 import { DOMAINS } from "@/lib/domains";
 import type { DomainId, LifeOSState } from "@/lib/types";
 
@@ -39,11 +40,16 @@ export default function InsightsView({ state }: { state: LifeOSState }) {
       out.push({ domain: "academics", text: `${sorted[0].s.name} has gotten the least study time in 14 days (${sorted[0].mins}m) versus ${sorted[sorted.length - 1].s.name} (${sorted[sorted.length - 1].mins}m) — worth rebalancing before the next deadline.` });
     }
 
-    const doneRate = state.tasks.filter((t) => t.done).length / state.tasks.length;
-    out.push({ domain: "tasks", text: `You're closing out ${Math.round(doneRate * 100)}% of tracked tasks. ${doneRate > 0.5 ? "Ahead of a healthy pace." : "Consider trimming scope or re-prioritizing the backlog."}` });
+    if (state.tasks.length > 0) {
+      const doneRate = state.tasks.filter((t) => t.done).length / state.tasks.length;
+      out.push({ domain: "tasks", text: `You're closing out ${Math.round(doneRate * 100)}% of tracked tasks. ${doneRate > 0.5 ? "Ahead of a healthy pace." : "Consider trimming scope or re-prioritizing the backlog."}` });
+    }
 
     return out;
   }, [state]);
+
+  const hasAnyData = state.tasks.length > 0 || state.habits.length > 0 || state.goals.length > 0
+    || state.healthLogs.length > 0 || state.studySessions.length > 0;
 
   return (
     <div className="fade-in">
@@ -62,14 +68,21 @@ export default function InsightsView({ state }: { state: LifeOSState }) {
         })}
       </div>
 
-      <div className="space-y-2.5">
-        {insights.map((ins, i) => (
-          <div key={i} className="surface rounded-xl p-4 flex items-start gap-3">
-            <span className="dot mt-1.5" style={{ background: DOMAINS[ins.domain].color }} />
-            <p className="text-sm leading-relaxed">{ins.text}</p>
-          </div>
-        ))}
-      </div>
+      {!hasAnyData ? (
+        <EmptyState icon={Sparkles} title="Nothing to learn from yet"
+          hint="Insights are patterns pulled from your own data — log a few tasks, habits, or health entries and they'll start showing up here." />
+      ) : insights.length === 0 ? (
+        <div className="text-xs text-dim">No standout patterns yet — check back as more data comes in.</div>
+      ) : (
+        <div className="space-y-2.5">
+          {insights.map((ins, i) => (
+            <div key={i} className="surface rounded-xl p-4 flex items-start gap-3">
+              <span className="dot mt-1.5" style={{ background: DOMAINS[ins.domain].color }} />
+              <p className="text-sm leading-relaxed">{ins.text}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

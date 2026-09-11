@@ -172,16 +172,20 @@ function QuickForm({
       {type.id === "habit" && (
         <div className="space-y-3">
           <FieldLabel>Which habit?</FieldLabel>
-          <div className="space-y-1.5">
-            {state.habits.map((h) => (
-              <button key={h.id} onClick={() => set("habitId", h.id)}
-                className="row-hover w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-sm"
-                style={{ background: values.habitId === h.id ? "var(--surface-2)" : "transparent" }}>
-                <Flame size={13} style={{ color: DOMAINS.habits.color }} /> {h.name}
-                {values.habitId === h.id && <Check size={13} className="ml-auto" />}
-              </button>
-            ))}
-          </div>
+          {state.habits.length === 0 ? (
+            <p className="text-xs text-dim">No habits yet — add one from the Habits page first.</p>
+          ) : (
+            <div className="space-y-1.5">
+              {state.habits.map((h) => (
+                <button key={h.id} onClick={() => set("habitId", h.id)}
+                  className="row-hover w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-sm"
+                  style={{ background: values.habitId === h.id ? "var(--surface-2)" : "transparent" }}>
+                  <Flame size={13} style={{ color: DOMAINS.habits.color }} /> {h.name}
+                  {values.habitId === h.id && <Check size={13} className="ml-auto" />}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
       {type.id === "health" && (
@@ -208,33 +212,52 @@ function QuickForm({
       )}
       {type.id === "assignment" && (
         <div className="space-y-3">
-          <div><FieldLabel>Title</FieldLabel><input autoFocus className={inputCls} value={values.title} onChange={(e) => set("title", e.target.value)} placeholder="Assignment name" /></div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><FieldLabel>Subject</FieldLabel>
-              <select className={inputCls} value={values.subjectId} onChange={(e) => set("subjectId", e.target.value)}>
-                {state.subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </div>
-            <div><FieldLabel>Due</FieldLabel><input type="date" className={inputCls} value={values.due} onChange={(e) => set("due", e.target.value)} /></div>
-          </div>
+          {state.subjects.length === 0 ? (
+            <p className="text-xs text-dim">No subjects yet — add one from the Academics page first.</p>
+          ) : (
+            <>
+              <div><FieldLabel>Title</FieldLabel><input autoFocus className={inputCls} value={values.title} onChange={(e) => set("title", e.target.value)} placeholder="Assignment name" /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><FieldLabel>Subject</FieldLabel>
+                  <select className={inputCls} value={values.subjectId} onChange={(e) => set("subjectId", e.target.value)}>
+                    {state.subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                </div>
+                <div><FieldLabel>Due</FieldLabel><input type="date" className={inputCls} value={values.due} onChange={(e) => set("due", e.target.value)} /></div>
+              </div>
+            </>
+          )}
         </div>
       )}
       {type.id === "study" && (
         <div className="space-y-3">
-          <div><FieldLabel>Subject</FieldLabel>
-            <select className={inputCls} value={values.subjectId} onChange={(e) => set("subjectId", e.target.value)}>
-              {state.subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-          </div>
-          <div><FieldLabel>Topic</FieldLabel><input autoFocus className={inputCls} value={values.topic} onChange={(e) => set("topic", e.target.value)} placeholder="What are you studying?" /></div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><FieldLabel>Minutes</FieldLabel><input type="number" className={inputCls} value={values.duration} onChange={(e) => set("duration", +e.target.value)} /></div>
-            <div><FieldLabel>Date</FieldLabel><input type="date" className={inputCls} value={values.date} onChange={(e) => set("date", e.target.value)} /></div>
-          </div>
+          {state.subjects.length === 0 ? (
+            <p className="text-xs text-dim">No subjects yet — add one from the Academics page first.</p>
+          ) : (
+            <>
+              <div><FieldLabel>Subject</FieldLabel>
+                <select className={inputCls} value={values.subjectId} onChange={(e) => set("subjectId", e.target.value)}>
+                  {state.subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+              <div><FieldLabel>Topic</FieldLabel><input autoFocus className={inputCls} value={values.topic} onChange={(e) => set("topic", e.target.value)} placeholder="What are you studying?" /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><FieldLabel>Minutes</FieldLabel><input type="number" className={inputCls} value={values.duration} onChange={(e) => set("duration", +e.target.value)} /></div>
+                <div><FieldLabel>Date</FieldLabel><input type="date" className={inputCls} value={values.date} onChange={(e) => set("date", e.target.value)} /></div>
+              </div>
+            </>
+          )}
         </div>
       )}
 
-      <button onClick={onSubmit} className="btn-primary w-full mt-4 py-2.5 rounded-lg text-sm flex items-center justify-center gap-1.5">
+      <button
+        onClick={onSubmit}
+        disabled={
+          (type.id === "habit" && state.habits.length === 0) ||
+          ((type.id === "assignment" || type.id === "study") && state.subjects.length === 0)
+        }
+        className="btn-primary w-full mt-4 py-2.5 rounded-lg text-sm flex items-center justify-center gap-1.5"
+      >
         Add
       </button>
     </div>

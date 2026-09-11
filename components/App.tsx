@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertCircle, Plus } from "lucide-react";
 import { getSessionUser, logOut, type PublicUser } from "@/lib/auth";
 import { useLifeOSStore } from "@/hooks/useLifeOSStore";
@@ -33,6 +33,37 @@ export default function App() {
     setUser(getSessionUser());
   }, []);
 
+  // The blocking script in layout.tsx already applied the correct class to
+  // <html> before paint — this just syncs React's state to match it, so the
+  // toggle button reflects reality without touching the DOM a second time.
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem("lifeos:dark");
+      if (stored !== null) setDark(stored === "1");
+    } catch {
+      /* ignore — falls back to the default */
+    }
+  }, []);
+
+  // Applies on every *change* to `dark` — but skips its own first run, since
+  // the mount-time value already matches the DOM (see above). Without that
+  // guard this would re-apply the hardcoded default on mount before the sync
+  // effect's setDark takes effect, causing a one-frame flash for anyone whose
+  // stored preference differs from the default.
+  const isFirstRun = useRef(true);
+  useEffect(() => {
+    if (isFirstRun.current) {
+      isFirstRun.current = false;
+      return;
+    }
+    document.documentElement.classList.toggle("dark", dark);
+    try {
+      window.localStorage.setItem("lifeos:dark", dark ? "1" : "0");
+    } catch {
+      /* localStorage unavailable — theme just won't persist across reloads */
+    }
+  }, [dark]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -46,27 +77,19 @@ export default function App() {
 
   if (user === undefined) {
     return (
-      <div className={dark ? "dark" : ""}>
-        <div className="min-h-screen flex items-center justify-center">
-          <Loading label="Checking session" />
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <Loading label="Checking session" />
       </div>
     );
   }
 
   if (!user) {
-    return (
-      <div className={dark ? "dark" : ""}>
-        <AuthScreen onAuthed={setUser} />
-      </div>
-    );
+    return <AuthScreen onAuthed={setUser} />;
   }
 
   return (
-    <div className={dark ? "dark" : ""}>
-      <AuthedApp user={user} dark={dark} setDark={setDark} view={view} setView={setView}
-        paletteOpen={paletteOpen} setPaletteOpen={setPaletteOpen} onLogOut={() => { logOut(); setUser(null); }} />
-    </div>
+    <AuthedApp user={user} dark={dark} setDark={setDark} view={view} setView={setView}
+      paletteOpen={paletteOpen} setPaletteOpen={setPaletteOpen} onLogOut={() => { logOut(); setUser(null); }} />
   );
 }
 

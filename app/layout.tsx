@@ -9,6 +9,21 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        {/* Runs before React hydrates, so the correct theme is on <html> for
+            the very first paint — no light-mode flash while dark mode loads. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var stored = localStorage.getItem("lifeos:dark");
+                var isDark = stored === null ? true : stored === "1";
+                document.documentElement.classList.toggle("dark", isDark);
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
       <body>{children}</body>
     </html>
   );

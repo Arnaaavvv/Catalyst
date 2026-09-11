@@ -5,7 +5,7 @@ import { domainMomentum } from "@/lib/derived";
 import { todayISO, fmtShort } from "@/lib/date";
 import Sparkline from "@/components/shared/Sparkline";
 import MomentumDial from "@/components/shared/MomentumDial";
-import { SectionHeader, MiniStat, inputCls, FieldLabel } from "@/components/shared/Primitives";
+import { SectionHeader, MiniStat, EmptyState, inputCls, FieldLabel } from "@/components/shared/Primitives";
 import type { HealthLog, LifeOSState } from "@/lib/types";
 import type { LifeOSActions } from "@/hooks/useLifeOSStore";
 import { Plus } from "lucide-react";
@@ -24,9 +24,10 @@ export default function HealthView({ state, actions }: { state: LifeOSState; act
   const [metric, setMetric] = useState<keyof HealthLog>("sleep");
   const [logOpen, setLogOpen] = useState(false);
   const logs = state.healthLogs.slice(-30);
+  const hasLogs = logs.length > 0;
   const activeMeta = HEALTH_METRICS.find((m) => m.key === metric)!;
   const values = logs.map((l) => Number(l[metric]));
-  const avg = (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1);
+  const avg = hasLogs ? (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1) : "—";
   const mom = domainMomentum("health", state);
 
   return (
@@ -34,45 +35,50 @@ export default function HealthView({ state, actions }: { state: LifeOSState; act
       <SectionHeader eyebrow="TRENDS & INPUTS" title="Health"
         action={<button onClick={() => setLogOpen(true)} className="btn-primary text-xs px-3 py-2 rounded-lg flex items-center gap-1.5"><Plus size={13} /> Log today</button>} />
 
-      <div className="grid gap-5" style={{ gridTemplateColumns: "2fr 1fr" }}>
-        <div className="surface rounded-xl p-4">
-          <div className="flex gap-1.5 mb-4 flex-wrap">
-            {HEALTH_METRICS.map((m) => (
-              <button key={m.key} onClick={() => setMetric(m.key)} className="chip"
-                style={{ background: metric === m.key ? "var(--health)" : "transparent", color: metric === m.key ? "var(--accent-ink)" : "var(--ink-dim)", borderColor: metric === m.key ? "var(--health)" : "var(--line-strong)" }}>
-                <m.icon size={11} /> {m.label}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-baseline gap-2 mb-1">
-            <span className="font-display text-3xl">{avg}{activeMeta.unit}</span>
-            <span className="text-xs text-dim">30-day average · {activeMeta.label.toLowerCase()}</span>
-          </div>
-          <Sparkline values={values} color="var(--health)" height={90} filled />
-          <div className="flex justify-between font-mono text-[10px] text-faint mt-1">
-            <span>{fmtShort(logs[0].date)}</span>
-            <span>{fmtShort(logs[logs.length - 1].date)}</span>
-          </div>
-        </div>
-
-        <div className="space-y-5">
-          <div className="surface rounded-xl p-4 flex items-center gap-4">
-            <MomentumDial state={mom.state} color="var(--health)" size={64} />
-            <div>
-              <div className="font-mono text-[10px] text-faint tracking-wide mb-1">HEALTH MOMENTUM</div>
-              <div className="text-xs text-dim">Based on sleep + activity, last 7 vs prior 7 days.</div>
-            </div>
-          </div>
+      {!hasLogs ? (
+        <EmptyState icon={Activity} title="No health data yet"
+          hint="Log today's sleep, steps, or exercise to start seeing trends here." />
+      ) : (
+        <div className="grid gap-5" style={{ gridTemplateColumns: "2fr 1fr" }}>
           <div className="surface rounded-xl p-4">
-            <div className="font-mono text-[10px] text-faint tracking-wide mb-3">LATEST ENTRY</div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="flex gap-1.5 mb-4 flex-wrap">
               {HEALTH_METRICS.map((m) => (
-                <MiniStat key={m.key} icon={m.icon} label={m.label} value={`${logs[logs.length - 1][m.key]}${m.unit}`} color="var(--health)" />
+                <button key={m.key} onClick={() => setMetric(m.key)} className="chip"
+                  style={{ background: metric === m.key ? "var(--health)" : "transparent", color: metric === m.key ? "var(--accent-ink)" : "var(--ink-dim)", borderColor: metric === m.key ? "var(--health)" : "var(--line-strong)" }}>
+                  <m.icon size={11} /> {m.label}
+                </button>
               ))}
             </div>
+            <div className="flex items-baseline gap-2 mb-1">
+              <span className="font-display text-3xl">{avg}{activeMeta.unit}</span>
+              <span className="text-xs text-dim">{logs.length}-day average · {activeMeta.label.toLowerCase()}</span>
+            </div>
+            <Sparkline values={values} color="var(--health)" height={90} filled />
+            <div className="flex justify-between font-mono text-[10px] text-faint mt-1">
+              <span>{fmtShort(logs[0].date)}</span>
+              <span>{fmtShort(logs[logs.length - 1].date)}</span>
+            </div>
+          </div>
+
+          <div className="space-y-5">
+            <div className="surface rounded-xl p-4 flex items-center gap-4">
+              <MomentumDial state={mom.state} color="var(--health)" size={64} />
+              <div>
+                <div className="font-mono text-[10px] text-faint tracking-wide mb-1">HEALTH MOMENTUM</div>
+                <div className="text-xs text-dim">Based on sleep + activity, last 7 vs prior 7 days.</div>
+              </div>
+            </div>
+            <div className="surface rounded-xl p-4">
+              <div className="font-mono text-[10px] text-faint tracking-wide mb-3">LATEST ENTRY</div>
+              <div className="grid grid-cols-2 gap-3">
+                {HEALTH_METRICS.map((m) => (
+                  <MiniStat key={m.key} icon={m.icon} label={m.label} value={`${logs[logs.length - 1][m.key]}${m.unit}`} color="var(--health)" />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {logOpen && <LogHealthModal state={state} actions={actions} onClose={() => setLogOpen(false)} />}
     </div>
@@ -83,7 +89,7 @@ function LogHealthModal({ state, actions, onClose }: { state: LifeOSState; actio
   const existing = state.healthLogs.find((l) => l.date === todayISO());
   const last = state.healthLogs[state.healthLogs.length - 1];
   const [vals, setVals] = useState<Omit<HealthLog, "date">>(
-    existing || { sleep: 7, steps: 6000, exerciseMin: 30, weight: last.weight, waterL: 1.5, mood: 3, energy: 3 }
+    existing || { sleep: 7, steps: 6000, exerciseMin: 30, weight: last?.weight ?? 70, waterL: 1.5, mood: 3, energy: 3 }
   );
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 modal-backdrop" style={{ background: "rgba(20,18,12,0.5)" }} onMouseDown={onClose}>
