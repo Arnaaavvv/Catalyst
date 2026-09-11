@@ -1,14 +1,18 @@
 "use client";
-import { Sun, Moon, LogOut } from "lucide-react";
+import { useState } from "react";
+import { Sun, Moon, LogOut, RotateCcw } from "lucide-react";
 import { NAV_ITEMS } from "@/lib/domains";
 import type { PublicUser } from "@/lib/auth";
+import ConfirmModal from "@/components/shared/ConfirmModal";
 
 export default function NavRail({
-  view, setView, dark, setDark, user, onLogOut,
+  view, setView, dark, setDark, user, onLogOut, onClearData,
 }: {
   view: string; setView: (v: string) => void; dark: boolean; setDark: (fn: (d: boolean) => boolean) => void;
-  user: PublicUser; onLogOut: () => void;
+  user: PublicUser; onLogOut: () => void; onClearData: () => void;
 }) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
   return (
     <div className="hidden md:flex flex-col justify-between w-[190px] flex-shrink-0 py-6 px-4 border-r hairline h-screen sticky top-0">
       <div>
@@ -37,10 +41,23 @@ export default function NavRail({
         <button onClick={() => setDark((d) => !d)} className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-dim row-hover">
           {dark ? <Sun size={14} /> : <Moon size={14} />} {dark ? "Light mode" : "Dark mode"}
         </button>
+        <button onClick={() => setConfirmOpen(true)} className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-dim row-hover">
+          <RotateCcw size={14} /> Clear data
+        </button>
         <button onClick={onLogOut} className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-dim row-hover">
           <LogOut size={14} /> Log out
         </button>
       </div>
+
+      {confirmOpen && (
+        <ConfirmModal
+          title="Clear all data?"
+          message="This permanently deletes every task, habit, goal, health log, and academic record on this account — including any example template data. This can't be undone."
+          confirmLabel="Clear everything"
+          onCancel={() => setConfirmOpen(false)}
+          onConfirm={() => { onClearData(); setConfirmOpen(false); }}
+        />
+      )}
     </div>
   );
 }

@@ -130,7 +130,7 @@ export function buildExampleTemplate(): LifeOSState {
 
   const healthLogs = genHealthHistory(30);
 
-  return { subjects, assignments, studySessions, goals, habits, tasks, healthLogs };
+  return { subjects, assignments, studySessions, goals, habits, tasks, healthLogs, isExample: true };
 }
 
 // What every new account actually starts with: nothing. The person fills in
@@ -145,5 +145,6 @@ export function buildEmptyState(): LifeOSState {
     habits: [],
     tasks: [],
     healthLogs: [],
+    isExample: false,
   };
 }

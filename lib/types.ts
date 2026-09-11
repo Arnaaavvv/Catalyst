@@ -96,6 +96,9 @@ export interface LifeOSState {
   habits: Habit[];
   tasks: Task[];
   healthLogs: HealthLog[];
+  // True only when this data came from "Load example template" and hasn't
+  // been cleared since. Drives the example-template banner on Today.
+  isExample: boolean;
 }
 
 export type MomentumState = "accelerating" | "steady" | "recovering" | "stalled";

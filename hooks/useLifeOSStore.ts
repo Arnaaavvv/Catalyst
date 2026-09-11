@@ -18,6 +18,7 @@ export interface LifeOSActions {
   addHabit: (name: string, target: number, unit: string, linkedGoalId: string | null) => void;
   addSubject: (name: string) => void;
   loadExampleTemplate: () => void;
+  clearAllData: () => void;
   commitQuickAdd: (parsed: QuickAddResult) => void;
 }
 
@@ -124,6 +125,11 @@ export function useLifeOSStore(userId: string) {
     // Deliberately a hard replace, not a merge — this is meant for someone
     // exploring the app, not for mixing demo data into real tracking.
     loadExampleTemplate: () => setState(() => buildExampleTemplate()),
+
+    // Wipes everything — example template or real data, doesn't matter —
+    // back to a blank slate. The confirmation step lives in the UI, not
+    // here; this action itself doesn't ask twice.
+    clearAllData: () => setState(() => buildEmptyState()),
 
     commitQuickAdd: (parsed) => setState((s) => {
       if (!s) return s;

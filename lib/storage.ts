@@ -23,7 +23,12 @@ export function loadState(userId: string): LifeOSState | null {
   if (!isStorageAvailable()) return null;
   try {
     const raw = window.localStorage.getItem(dataKey(userId));
-    return raw ? (JSON.parse(raw) as LifeOSState) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as LifeOSState;
+    // Backfills a field for state saved before `isExample` existed, so old
+    // sessions don't break on a schema change like this one.
+    if (typeof parsed.isExample !== "boolean") parsed.isExample = false;
+    return parsed;
   } catch {
     return null;
   }

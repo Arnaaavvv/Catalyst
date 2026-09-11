@@ -1,16 +1,18 @@
 "use client";
-import { useMemo } from "react";
-import { BedDouble, Footprints, Activity, Droplet, Sparkles } from "lucide-react";
+import { useMemo, useState } from "react";
+import { BedDouble, Footprints, Activity, Droplet, Sparkles, Info } from "lucide-react";
 import { todayISO, fmtDay, fmtShort, daysBetween } from "@/lib/date";
 import { habitStreak, domainMomentum, goalProgress } from "@/lib/derived";
 import { DOMAINS } from "@/lib/domains";
 import LifePulse from "@/components/shared/LifePulse";
 import { EmptyState, TaskCheck, MiniStat } from "@/components/shared/Primitives";
+import ConfirmModal from "@/components/shared/ConfirmModal";
 import type { LifeOSState } from "@/lib/types";
 import type { LifeOSActions } from "@/hooks/useLifeOSStore";
 import { CheckSquare, Flame } from "lucide-react";
 
 export default function TodayView({ state, actions }: { state: LifeOSState; actions: LifeOSActions }) {
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const today = todayISO();
   const todaysTasks = state.tasks.filter((t) => t.due === today || (t.due && t.due < today && !t.done));
   const overdue = todaysTasks.filter((t) => t.due && t.due < today && !t.done).length;
@@ -55,6 +57,20 @@ export default function TodayView({ state, actions }: { state: LifeOSState; acti
         </div>
       ) : (
         <>
+          {state.isExample && (
+            <div className="surface rounded-xl p-3.5 mb-5 flex items-center gap-3" style={{ borderColor: "var(--accent)" }}>
+              <Info size={15} style={{ color: "var(--accent)" }} className="flex-shrink-0" />
+              <p className="text-xs text-dim flex-1">
+                You&apos;re viewing the <strong className="text-ink font-medium">example template</strong> —
+                sample data to explore the app. Clear it whenever you&apos;re ready to track your own.
+              </p>
+              <button onClick={() => setClearConfirmOpen(true)}
+                className="text-xs px-3 py-1.5 rounded-lg hairline border flex-shrink-0">
+                Clear example data
+              </button>
+            </div>
+          )}
+
           <div className="surface rounded-xl p-4 mb-6">
             <div className="font-mono text-[10px] text-faint tracking-wide mb-3">LIFE PULSE · LAST 14 DAYS</div>
             <LifePulse state={state} />
@@ -165,6 +181,16 @@ export default function TodayView({ state, actions }: { state: LifeOSState; acti
             </div>
           </div>
         </>
+      )}
+
+      {clearConfirmOpen && (
+        <ConfirmModal
+          title="Clear example data?"
+          message="This removes all example template data so you can start tracking your own from a blank slate. This can't be undone."
+          confirmLabel="Clear it"
+          onCancel={() => setClearConfirmOpen(false)}
+          onConfirm={() => { actions.clearAllData(); setClearConfirmOpen(false); }}
+        />
       )}
     </div>
   );
