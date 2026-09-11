@@ -1,4 +1,4 @@
-# Life OS
+# Catalyst
 
 A personal operating system — Health, Habits, Goals, Tasks, and Academics — in one
 connected product, not a pile of dashboards. Built with Next.js 16 (App Router,
