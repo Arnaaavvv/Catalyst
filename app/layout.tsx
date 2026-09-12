@@ -2,16 +2,23 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Life OS",
+  title: "Catalyst",
   description: "A personal operating system for health, habits, goals, tasks, and academics.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Runs before React hydrates, so the correct theme is on <html> for
-            the very first paint — no light-mode flash while dark mode loads. */}
+            the very first paint — no light-mode flash while dark mode loads.
+            suppressHydrationWarning is required here specifically because
+            this script intentionally makes the live DOM differ from the
+            server-rendered markup for this one attribute; without it React
+            logs a hydration-mismatch error every load even though nothing
+            is actually broken. This only suppresses the warning for this
+            element's direct attributes, not for any mismatch deeper in
+            the tree. */}
         <script
           dangerouslySetInnerHTML={{
             __html: `

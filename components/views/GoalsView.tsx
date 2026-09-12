@@ -5,6 +5,7 @@ import { domainMomentum, goalProgress, habitRate } from "@/lib/derived";
 import { fmtShort, isoOf } from "@/lib/date";
 import MomentumDial from "@/components/shared/MomentumDial";
 import { SectionHeader, TaskCheck, EmptyState, inputCls, FieldLabel } from "@/components/shared/Primitives";
+import Portal from "@/components/shared/Portal";
 import type { LifeOSState } from "@/lib/types";
 import type { LifeOSActions } from "@/hooks/useLifeOSStore";
 import { Flame, Plus } from "lucide-react";
@@ -183,16 +184,18 @@ function NewGoalModal({ actions, onClose }: { actions: LifeOSActions; onClose: (
   const [title, setTitle] = useState("");
   const [deadline, setDeadline] = useState(isoOf(30));
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 modal-backdrop" style={{ background: "rgba(20,18,12,0.5)" }} onMouseDown={onClose}>
-      <div className="modal-panel surface rounded-2xl p-5 w-full max-w-[400px]" onMouseDown={(e) => e.stopPropagation()} style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}>
-        <div className="flex items-center justify-between mb-4"><span className="font-display text-lg">New goal</span><button onClick={onClose}><X size={16} className="text-faint" /></button></div>
-        <FieldLabel>Title</FieldLabel>
-        <input autoFocus className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What are you working toward?" />
-        <div className="h-3" />
-        <FieldLabel>Deadline</FieldLabel>
-        <input type="date" className={inputCls} value={deadline} onChange={(e) => setDeadline(e.target.value)} />
-        <button onClick={() => { if (title.trim()) { actions.addGoal(title, deadline); onClose(); } }} className="btn-primary w-full mt-4 py-2.5 rounded-lg text-sm">Create goal</button>
+    <Portal>
+      <div className="fixed inset-0 z-50 flex items-center justify-center px-4 modal-backdrop" style={{ background: "rgba(20,18,12,0.5)" }} onMouseDown={onClose}>
+        <div className="modal-panel surface rounded-2xl p-5 w-full max-w-[400px]" onMouseDown={(e) => e.stopPropagation()} style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}>
+          <div className="flex items-center justify-between mb-4"><span className="font-display text-lg">New goal</span><button onClick={onClose}><X size={16} className="text-faint" /></button></div>
+          <FieldLabel>Title</FieldLabel>
+          <input autoFocus className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What are you working toward?" />
+          <div className="h-3" />
+          <FieldLabel>Deadline</FieldLabel>
+          <input type="date" className={inputCls} value={deadline} onChange={(e) => setDeadline(e.target.value)} />
+          <button onClick={() => { if (title.trim()) { actions.addGoal(title, deadline); onClose(); } }} className="btn-primary w-full mt-4 py-2.5 rounded-lg text-sm">Create goal</button>
+        </div>
       </div>
-    </div>
+    </Portal>
   );
 }

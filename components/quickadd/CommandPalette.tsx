@@ -6,6 +6,7 @@ import { heuristicParse, parseWithAI } from "@/lib/quickadd";
 import { QUICK_TYPES, defaultFormFor, type QuickType } from "@/lib/quickAddTypes";
 import { DOMAINS } from "@/lib/domains";
 import { inputCls, FieldLabel } from "@/components/shared/Primitives";
+import Portal from "@/components/shared/Portal";
 import type { LifeOSActions } from "@/hooks/useLifeOSStore";
 
 type Mode = "menu" | "form" | "confirm";
@@ -77,12 +78,13 @@ export default function CommandPalette({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] px-4 modal-backdrop"
-      style={{ background: "rgba(20,18,12,0.5)" }} onMouseDown={onClose}>
-      <div className="modal-panel w-full max-w-[560px] surface rounded-2xl overflow-hidden" style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}
-        onMouseDown={(e) => e.stopPropagation()}>
+    <Portal>
+      <div className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] px-4 modal-backdrop"
+        style={{ background: "rgba(20,18,12,0.5)" }} onMouseDown={onClose}>
+        <div className="modal-panel w-full max-w-[560px] surface rounded-2xl overflow-hidden" style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}
+          onMouseDown={(e) => e.stopPropagation()}>
 
-        {mode === "menu" && (
+          {mode === "menu" && (
           <>
             <div className="flex items-center gap-2 px-4 py-3 border-b hairline">
               <Command size={15} className="text-faint" />
@@ -135,8 +137,9 @@ export default function CommandPalette({
           <ConfirmParsed parsed={parsed} onBack={() => setMode("menu")}
             onEdit={setParsed} onConfirm={commitParsed} />
         )}
+        </div>
       </div>
-    </div>
+    </Portal>
   );
 }
 

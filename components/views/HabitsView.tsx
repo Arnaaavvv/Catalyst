@@ -5,6 +5,7 @@ import { habitRate, habitStreak, habitMomentum, domainMomentum, MOMENTUM_META } 
 import { todayISO } from "@/lib/date";
 import MomentumDial from "@/components/shared/MomentumDial";
 import { SectionHeader, TaskCheck, EmptyState, inputCls, FieldLabel } from "@/components/shared/Primitives";
+import Portal from "@/components/shared/Portal";
 import { DOMAINS } from "@/lib/domains";
 import type { Habit, LifeOSState } from "@/lib/types";
 import type { LifeOSActions } from "@/hooks/useLifeOSStore";
@@ -89,7 +90,8 @@ function NewHabitModal({ state, actions, onClose }: { state: LifeOSState; action
   const [linkedGoalId, setLinkedGoalId] = useState<string>("");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 modal-backdrop" style={{ background: "rgba(20,18,12,0.5)" }} onMouseDown={onClose}>
+    <Portal>
+      <div className="fixed inset-0 z-50 flex items-center justify-center px-4 modal-backdrop" style={{ background: "rgba(20,18,12,0.5)" }} onMouseDown={onClose}>
       <div className="modal-panel surface rounded-2xl p-5 w-full max-w-[400px]" onMouseDown={(e) => e.stopPropagation()} style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}>
         <div className="flex items-center justify-between mb-4">
           <span className="font-display text-lg">New habit</span>
@@ -128,5 +130,6 @@ function NewHabitModal({ state, actions, onClose }: { state: LifeOSState; action
         </button>
       </div>
     </div>
+    </Portal>
   );
 }

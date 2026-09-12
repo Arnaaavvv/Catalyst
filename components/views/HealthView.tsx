@@ -6,6 +6,7 @@ import { todayISO, fmtShort } from "@/lib/date";
 import Sparkline from "@/components/shared/Sparkline";
 import MomentumDial from "@/components/shared/MomentumDial";
 import { SectionHeader, MiniStat, EmptyState, inputCls, FieldLabel } from "@/components/shared/Primitives";
+import Portal from "@/components/shared/Portal";
 import type { HealthLog, LifeOSState } from "@/lib/types";
 import type { LifeOSActions } from "@/hooks/useLifeOSStore";
 import { Plus } from "lucide-react";
@@ -92,23 +93,25 @@ function LogHealthModal({ state, actions, onClose }: { state: LifeOSState; actio
     existing || { sleep: 7, steps: 6000, exerciseMin: 30, weight: last?.weight ?? 70, waterL: 1.5, mood: 3, energy: 3 }
   );
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 modal-backdrop" style={{ background: "rgba(20,18,12,0.5)" }} onMouseDown={onClose}>
-      <div className="modal-panel surface rounded-2xl p-5 w-full max-w-[420px]" onMouseDown={(e) => e.stopPropagation()} style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}>
-        <div className="flex items-center justify-between mb-4">
-          <span className="font-display text-lg">Log today</span>
-          <button onClick={onClose} className="text-faint hover:text-ink"><X size={16} /></button>
+    <Portal>
+      <div className="fixed inset-0 z-50 flex items-center justify-center px-4 modal-backdrop" style={{ background: "rgba(20,18,12,0.5)" }} onMouseDown={onClose}>
+        <div className="modal-panel surface rounded-2xl p-5 w-full max-w-[420px]" onMouseDown={(e) => e.stopPropagation()} style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}>
+          <div className="flex items-center justify-between mb-4">
+            <span className="font-display text-lg">Log today</span>
+            <button onClick={onClose} className="text-faint hover:text-ink"><X size={16} /></button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {HEALTH_METRICS.map((m) => (
+              <div key={m.key}>
+                <FieldLabel>{m.label} ({m.unit || "count"})</FieldLabel>
+                <input type="number" step="0.1" className={inputCls} value={vals[m.key]}
+                  onChange={(e) => setVals((v) => ({ ...v, [m.key]: +e.target.value }))} />
+              </div>
+            ))}
+          </div>
+          <button onClick={() => { actions.logHealth(vals); onClose(); }} className="btn-primary w-full mt-4 py-2.5 rounded-lg text-sm">Save entry</button>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          {HEALTH_METRICS.map((m) => (
-            <div key={m.key}>
-              <FieldLabel>{m.label} ({m.unit || "count"})</FieldLabel>
-              <input type="number" step="0.1" className={inputCls} value={vals[m.key]}
-                onChange={(e) => setVals((v) => ({ ...v, [m.key]: +e.target.value }))} />
-            </div>
-          ))}
-        </div>
-        <button onClick={() => { actions.logHealth(vals); onClose(); }} className="btn-primary w-full mt-4 py-2.5 rounded-lg text-sm">Save entry</button>
       </div>
-    </div>
+    </Portal>
   );
 }

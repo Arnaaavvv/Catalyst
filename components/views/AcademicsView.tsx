@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Play, Pause, Square, Plus, X, GraduationCap } from "lucide-react";
 import { todayISO, fmtShort, daysBetween } from "@/lib/date";
 import { SectionHeader, TaskCheck, EmptyState, inputCls, FieldLabel } from "@/components/shared/Primitives";
+import Portal from "@/components/shared/Portal";
 import type { LifeOSState } from "@/lib/types";
 import type { LifeOSActions } from "@/hooks/useLifeOSStore";
 
@@ -147,21 +148,23 @@ export default function AcademicsView({ state, actions }: { state: LifeOSState; 
 function NewSubjectModal({ actions, onClose }: { actions: LifeOSActions; onClose: () => void }) {
   const [name, setName] = useState("");
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 modal-backdrop" style={{ background: "rgba(20,18,12,0.5)" }} onMouseDown={onClose}>
-      <div className="modal-panel surface rounded-2xl p-5 w-full max-w-[380px]" onMouseDown={(e) => e.stopPropagation()} style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}>
-        <div className="flex items-center justify-between mb-4">
-          <span className="font-display text-lg">New subject</span>
-          <button onClick={onClose}><X size={16} className="text-faint" /></button>
+    <Portal>
+      <div className="fixed inset-0 z-50 flex items-center justify-center px-4 modal-backdrop" style={{ background: "rgba(20,18,12,0.5)" }} onMouseDown={onClose}>
+        <div className="modal-panel surface rounded-2xl p-5 w-full max-w-[380px]" onMouseDown={(e) => e.stopPropagation()} style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}>
+          <div className="flex items-center justify-between mb-4">
+            <span className="font-display text-lg">New subject</span>
+            <button onClick={onClose}><X size={16} className="text-faint" /></button>
+          </div>
+          <FieldLabel>Name</FieldLabel>
+          <input autoFocus className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Organic Chemistry" />
+          <button
+            onClick={() => { if (name.trim()) { actions.addSubject(name.trim()); onClose(); } }}
+            className="btn-primary w-full mt-4 py-2.5 rounded-lg text-sm"
+          >
+            Add subject
+          </button>
         </div>
-        <FieldLabel>Name</FieldLabel>
-        <input autoFocus className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Organic Chemistry" />
-        <button
-          onClick={() => { if (name.trim()) { actions.addSubject(name.trim()); onClose(); } }}
-          className="btn-primary w-full mt-4 py-2.5 rounded-lg text-sm"
-        >
-          Add subject
-        </button>
       </div>
-    </div>
+    </Portal>
   );
 }
