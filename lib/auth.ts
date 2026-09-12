@@ -8,10 +8,15 @@ import { supabase, isSupabaseConfigured } from "./supabaseClient";
 // if you need to compare) — all of that is gone now, replaced by the
 // Supabase JS client below.
 
+export type Sex = "female" | "male" | "other";
+
 export interface PublicUser {
   id: string;
   name: string;
   email: string;
+  username: string | null;
+  dob: string | null; // ISO date (YYYY-MM-DD) — source of truth; age is derived from this, never stored
+  sex: Sex | null;
 }
 
 export class AuthError extends Error {}
@@ -24,12 +29,19 @@ function assertConfigured(): void {
   }
 }
 
+const VALID_SEX: Sex[] = ["female", "male", "other"];
+
 function toPublicUser(user: SupabaseUser): PublicUser {
-  const metaName = typeof user.user_metadata?.name === "string" ? user.user_metadata.name : null;
+  const meta = user.user_metadata ?? {};
+  const metaName = typeof meta.name === "string" ? meta.name : null;
+  const metaSex = typeof meta.sex === "string" && (VALID_SEX as string[]).includes(meta.sex) ? (meta.sex as Sex) : null;
   return {
     id: user.id,
     name: metaName || user.email?.split("@")[0] || "there",
     email: user.email ?? "",
+    username: typeof meta.username === "string" && meta.username.trim() ? meta.username : null,
+    dob: typeof meta.dob === "string" && meta.dob ? meta.dob : null,
+    sex: metaSex,
   };
 }
 
@@ -104,4 +116,29 @@ export function onAuthChange(callback: (user: PublicUser | null) => void): () =>
     callback(session?.user ? toPublicUser(session.user) : null);
   });
   return () => data.subscription.unsubscribe();
+}
+
+export interface ProfileUpdate {
+  username: string; // "" clears it back to unset
+  dob: string; // "" clears it back to unset
+  sex: Sex | "";
+}
+
+// Profile fields live in Supabase Auth's own user_metadata — not a separate
+// table. There's no dedicated "profiles" table for this app, so there's also
+// no uniqueness constraint on username; two accounts could pick the same
+// one. Fine for a personal-use app with no public/social surface, but worth
+// knowing if that ever changes.
+export async function updateProfile(fields: ProfileUpdate): Promise<PublicUser> {
+  assertConfigured();
+  const { data, error } = await supabase!.auth.updateUser({
+    data: {
+      username: fields.username.trim() || null,
+      dob: fields.dob || null,
+      sex: fields.sex || null,
+    },
+  });
+  if (error) throw new AuthError(error.message);
+  if (!data.user) throw new AuthError("Update didn't return a user — please try again.");
+  return toPublicUser(data.user);
 }

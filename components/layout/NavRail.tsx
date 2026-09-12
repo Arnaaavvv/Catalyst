@@ -1,17 +1,20 @@
 "use client";
 import { useState } from "react";
-import { Sun, Moon, LogOut, RotateCcw } from "lucide-react";
+import { Sun, Moon, LogOut, RotateCcw, UserCog } from "lucide-react";
 import { NAV_ITEMS } from "@/lib/domains";
 import type { PublicUser } from "@/lib/auth";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import ManageAccountModal from "@/components/account/ManageAccountModal";
 
 export default function NavRail({
-  view, setView, dark, setDark, user, onLogOut, onClearData,
+  view, setView, dark, setDark, user, onLogOut, onClearData, onUserUpdate,
 }: {
   view: string; setView: (v: string) => void; dark: boolean; setDark: (fn: (d: boolean) => boolean) => void;
-  user: PublicUser; onLogOut: () => void; onClearData: () => void;
+  user: PublicUser; onLogOut: () => void; onClearData: () => void; onUserUpdate: (user: PublicUser) => void;
 }) {
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+  const [manageAccountOpen, setManageAccountOpen] = useState(false);
 
   return (
     <div className="hidden md:flex flex-col justify-between w-[190px] flex-shrink-0 py-6 px-4 border-r hairline h-screen sticky top-0">
@@ -34,29 +37,47 @@ export default function NavRail({
         </nav>
       </div>
       <div>
-        <div className="px-2.5 py-2 mb-1">
+        <button onClick={() => setManageAccountOpen(true)}
+          className="row-hover w-full text-left px-2.5 py-2 rounded-lg mb-1">
           <div className="text-xs font-medium truncate">{user.name}</div>
           <div className="text-[10px] text-faint truncate">{user.email}</div>
-        </div>
+        </button>
+        <button onClick={() => setManageAccountOpen(true)} className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-dim row-hover">
+          <UserCog size={14} /> Manage account
+        </button>
         <button onClick={() => setDark((d) => !d)} className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-dim row-hover">
           {dark ? <Sun size={14} /> : <Moon size={14} />} {dark ? "Light mode" : "Dark mode"}
         </button>
-        <button onClick={() => setConfirmOpen(true)} className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-dim row-hover">
+        <button onClick={() => setClearConfirmOpen(true)} className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-dim row-hover">
           <RotateCcw size={14} /> Clear data
         </button>
-        <button onClick={onLogOut} className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-dim row-hover">
+        <button onClick={() => setLogoutConfirmOpen(true)} className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-dim row-hover">
           <LogOut size={14} /> Log out
         </button>
       </div>
 
-      {confirmOpen && (
+      {clearConfirmOpen && (
         <ConfirmModal
           title="Clear all data?"
           message="This permanently deletes every task, habit, goal, health log, and academic record on this account — including any example template data. This can't be undone."
           confirmLabel="Clear everything"
-          onCancel={() => setConfirmOpen(false)}
-          onConfirm={() => { onClearData(); setConfirmOpen(false); }}
+          onCancel={() => setClearConfirmOpen(false)}
+          onConfirm={() => { onClearData(); setClearConfirmOpen(false); }}
         />
+      )}
+
+      {logoutConfirmOpen && (
+        <ConfirmModal
+          title="Log out?"
+          message="You'll need to log back in to see your data again. Nothing is deleted — this just ends your session."
+          confirmLabel="Log out"
+          onCancel={() => setLogoutConfirmOpen(false)}
+          onConfirm={() => { setLogoutConfirmOpen(false); onLogOut(); }}
+        />
+      )}
+
+      {manageAccountOpen && (
+        <ManageAccountModal user={user} onClose={() => setManageAccountOpen(false)} onUpdated={onUserUpdate} />
       )}
     </div>
   );

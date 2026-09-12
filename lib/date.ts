@@ -21,5 +21,19 @@ export const fmtShort = (iso: string): string =>
 export const daysBetween = (a: string, b: string): number =>
   Math.round((new Date(b).getTime() - new Date(a).getTime()) / DAY);
 
+// Derived from date of birth rather than stored as its own field — a raw
+// "age" number would silently go stale the moment a birthday passes, since
+// nothing would ever re-save it. dob is the only source of truth; age is
+// always computed fresh at render time.
+export const calculateAge = (dobISO: string): number => {
+  const dob = new Date(dobISO + "T00:00:00");
+  const now = new Date();
+  let age = now.getFullYear() - dob.getFullYear();
+  const hadBirthdayThisYear =
+    now.getMonth() > dob.getMonth() || (now.getMonth() === dob.getMonth() && now.getDate() >= dob.getDate());
+  if (!hadBirthdayThisYear) age -= 1;
+  return age;
+};
+
 let _id = 1000;
 export const uid = (prefix: string): string => `${prefix}_${(_id++).toString(36)}_${Date.now().toString(36).slice(-4)}`;

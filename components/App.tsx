@@ -103,15 +103,15 @@ export default function App() {
   }
 
   return (
-    <AuthedApp user={user} dark={dark} setDark={setDark} view={view} setView={setView}
+    <AuthedApp user={user} onUserUpdate={setUser} dark={dark} setDark={setDark} view={view} setView={setView}
       paletteOpen={paletteOpen} setPaletteOpen={setPaletteOpen} onLogOut={() => { setUser(null); void logOut(); }} />
   );
 }
 
 function AuthedApp({
-  user, dark, setDark, view, setView, paletteOpen, setPaletteOpen, onLogOut,
+  user, onUserUpdate, dark, setDark, view, setView, paletteOpen, setPaletteOpen, onLogOut,
 }: {
-  user: PublicUser; dark: boolean; setDark: (fn: (d: boolean) => boolean) => void;
+  user: PublicUser; onUserUpdate: (user: PublicUser) => void; dark: boolean; setDark: (fn: (d: boolean) => boolean) => void;
   view: string; setView: (v: string) => void; paletteOpen: boolean; setPaletteOpen: (v: boolean) => void;
   onLogOut: () => void;
 }) {
@@ -138,7 +138,7 @@ function AuthedApp({
   return (
     <>
       <div className="flex">
-        <NavRail view={view} setView={setView} dark={dark} setDark={setDark} user={user} onLogOut={onLogOut} onClearData={actions.clearAllData} />
+        <NavRail view={view} setView={setView} dark={dark} setDark={setDark} user={user} onLogOut={onLogOut} onClearData={actions.clearAllData} onUserUpdate={onUserUpdate} />
         <div className="flex-1 min-w-0">
           <MobileNav view={view} setView={setView} />
           <TopBar onQuickAdd={() => setPaletteOpen(true)} />
