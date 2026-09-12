@@ -5,12 +5,12 @@ import type { LifeOSState } from "./types";
 // device, in this browser, until you clear site data. Wrapped in try/catch
 // throughout because localStorage can throw (private browsing, quota, SSR).
 
-const dataKey = (userId: string) => `lifeos:data:${userId}`;
+const dataKey = (userId: string) => `catalyst:data:${userId}`;
 
 export function isStorageAvailable(): boolean {
   if (typeof window === "undefined") return false;
   try {
-    const k = "__lifeos_test__";
+    const k = "__catalyst_test__";
     window.localStorage.setItem(k, "1");
     window.localStorage.removeItem(k);
     return true;

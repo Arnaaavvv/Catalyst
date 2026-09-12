@@ -31,9 +31,9 @@ export default function AuthScreen({ onAuthed }: { onAuthed: (user: PublicUser) 
       <div className="w-full max-w-[380px]">
         <div className="flex items-center gap-2 mb-8 justify-center">
           <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ background: "var(--accent)" }}>
-            <span className="font-display text-sm" style={{ color: "var(--accent-ink)" }}>L</span>
+            <span className="font-display text-sm" style={{ color: "var(--accent-ink)" }}>C</span>
           </div>
-          <span className="font-display text-lg">Life OS</span>
+          <span className="font-display text-lg">Catalyst</span>
         </div>
 
         <div className="surface rounded-2xl p-6">

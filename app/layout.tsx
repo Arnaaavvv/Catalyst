@@ -23,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                var stored = localStorage.getItem("lifeos:dark");
+                var stored = localStorage.getItem("catalyst:dark");
                 var isDark = stored === null ? true : stored === "1";
                 document.documentElement.classList.toggle("dark", isDark);
               } catch (e) {}

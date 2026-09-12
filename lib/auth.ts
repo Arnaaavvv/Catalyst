@@ -9,8 +9,8 @@ import { isStorageAvailable } from "./storage";
 // reset, and offers no protection if someone else has access to this browser.
 // Don't reuse a real/sensitive password here.
 
-const USERS_KEY = "lifeos:users";
-const SESSION_KEY = "lifeos:session";
+const USERS_KEY = "catalyst:users";
+const SESSION_KEY = "catalyst:session";
 
 export type PublicUser = Omit<User, "passwordHash" | "salt">;
 

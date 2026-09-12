@@ -38,7 +38,7 @@ export default function App() {
   // toggle button reflects reality without touching the DOM a second time.
   useEffect(() => {
     try {
-      const stored = window.localStorage.getItem("lifeos:dark");
+      const stored = window.localStorage.getItem("catalyst:dark");
       if (stored !== null) setDark(stored === "1");
     } catch {
       /* ignore — falls back to the default */
@@ -58,7 +58,7 @@ export default function App() {
     }
     document.documentElement.classList.toggle("dark", dark);
     try {
-      window.localStorage.setItem("lifeos:dark", dark ? "1" : "0");
+      window.localStorage.setItem("catalyst:dark", dark ? "1" : "0");
     } catch {
       /* localStorage unavailable — theme just won't persist across reloads */
     }

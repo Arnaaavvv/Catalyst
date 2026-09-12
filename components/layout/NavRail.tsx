@@ -18,9 +18,9 @@ export default function NavRail({
       <div>
         <div className="flex items-center gap-2 mb-8 px-1">
           <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: "var(--accent)" }}>
-            <span className="font-display text-[13px]" style={{ color: "var(--accent-ink)" }}>L</span>
+            <span className="font-display text-[13px]" style={{ color: "var(--accent-ink)" }}>C</span>
           </div>
-          <span className="font-display text-[15px]">Life OS</span>
+          <span className="font-display text-[15px]">Catalyst</span>
         </div>
         <nav className="space-y-0.5">
           {NAV_ITEMS.map((item) => (

@@ -32,7 +32,7 @@ function genHealthHistory(days: number): HealthLog[] {
 }
 
 // Builds a realistic seeded dataset so someone can explore a fully-populated
-// Life OS before deciding to use it for real. New accounts do NOT get this by
+// Catalyst before deciding to use it for real. New accounts do NOT get this by
 // default — see buildEmptyState() below for what a fresh sign-up actually
 // starts with.
 export function buildExampleTemplate(): LifeOSState {
