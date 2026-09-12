@@ -1,54 +1,43 @@
+import { supabase, isSupabaseConfigured } from "./supabaseClient";
 import type { LifeOSState } from "./types";
 
-// Everything here is browser-cache storage (localStorage) — there is no
-// server or database. That's the explicit design: your data lives on this
-// device, in this browser, until you clear site data. Wrapped in try/catch
-// throughout because localStorage can throw (private browsing, quota, SSR).
+// Data lives in Supabase now — one row per user in `life_os_data`, secured
+// by the Row Level Security policies in supabase/schema.sql. This file used
+// to read/write localStorage directly; none of that remains.
 
-const dataKey = (userId: string) => `catalyst:data:${userId}`;
+export type LoadResult =
+  | { ok: true; data: LifeOSState | null } // data: null means no row yet — a brand-new account, not an error
+  | { ok: false; message: string };
 
-export function isStorageAvailable(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    const k = "__catalyst_test__";
-    window.localStorage.setItem(k, "1");
-    window.localStorage.removeItem(k);
-    return true;
-  } catch {
-    return false;
+export async function loadState(userId: string): Promise<LoadResult> {
+  if (!isSupabaseConfigured || !supabase) {
+    return {
+      ok: false,
+      message: "Supabase isn't configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local, then restart the dev server.",
+    };
   }
+
+  const { data, error } = await supabase
+    .from("life_os_data")
+    .select("data")
+    .eq("user_id", userId)
+    // .maybeSingle() returns { data: null, error: null } when no row matches.
+    // .single() would instead treat "no row" as an error — wrong here, since
+    // "no row yet" is the expected, normal state for a brand-new account.
+    .maybeSingle();
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+  return { ok: true, data: (data?.data as LifeOSState | undefined) ?? null };
 }
 
-export function loadState(userId: string): LifeOSState | null {
-  if (!isStorageAvailable()) return null;
-  try {
-    const raw = window.localStorage.getItem(dataKey(userId));
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as LifeOSState;
-    // Backfills a field for state saved before `isExample` existed, so old
-    // sessions don't break on a schema change like this one.
-    if (typeof parsed.isExample !== "boolean") parsed.isExample = false;
-    return parsed;
-  } catch {
-    return null;
-  }
-}
+export async function saveState(userId: string, state: LifeOSState): Promise<boolean> {
+  if (!isSupabaseConfigured || !supabase) return false;
 
-export function saveState(userId: string, state: LifeOSState): boolean {
-  if (!isStorageAvailable()) return false;
-  try {
-    window.localStorage.setItem(dataKey(userId), JSON.stringify(state));
-    return true;
-  } catch {
-    return false;
-  }
-}
+  const { error } = await supabase
+    .from("life_os_data")
+    .upsert({ user_id: userId, data: state }, { onConflict: "user_id" });
 
-export function clearState(userId: string): void {
-  if (!isStorageAvailable()) return;
-  try {
-    window.localStorage.removeItem(dataKey(userId));
-  } catch {
-    /* ignore */
-  }
+  return !error;
 }

@@ -115,11 +115,24 @@ function AuthedApp({
   view: string; setView: (v: string) => void; paletteOpen: boolean; setPaletteOpen: (v: boolean) => void;
   onLogOut: () => void;
 }) {
-  const { state, loading, saveError, actions } = useLifeOSStore(user.id);
+  const { state, status, loadError, saveError, actions, retry } = useLifeOSStore(user.id);
   const ViewComponent = VIEWS[view];
 
-  if (loading || !state) {
+  if (status === "loading" || !state) {
     return <div className="min-h-screen flex items-center justify-center"><Loading label="Loading your data" /></div>;
+  }
+
+  if (status === "error") {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="surface rounded-2xl p-6 max-w-sm text-center">
+          <AlertCircle size={18} style={{ color: "var(--tasks)" }} className="mx-auto mb-3" />
+          <h2 className="font-display text-lg mb-2">Couldn&apos;t load your data</h2>
+          <p className="text-sm text-dim leading-relaxed mb-5">{loadError}</p>
+          <button onClick={retry} className="btn-primary w-full py-2.5 rounded-lg text-sm">Try again</button>
+        </div>
+      </div>
+    );
   }
 
   return (

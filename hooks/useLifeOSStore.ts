@@ -22,38 +22,67 @@ export interface LifeOSActions {
   commitQuickAdd: (parsed: QuickAddResult) => void;
 }
 
+export type StoreStatus = "loading" | "error" | "ready";
+
 export function useLifeOSStore(userId: string) {
   const [state, setState] = useState<LifeOSState | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<StoreStatus>("loading");
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState(false);
+  const [retryToken, setRetryToken] = useState(0);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Guards against immediately re-saving the exact data we just loaded —
+  // without this, every load (including a plain page refresh) would fire an
+  // unnecessary upsert back to Supabase before the person has changed anything.
+  const skipNextSaveRef = useRef(true);
 
-  // Load this user's data from browser cache. A brand-new account starts
-  // completely empty — the example template is opt-in only (see
-  // loadExampleTemplate below), never applied automatically.
+  // Load this user's data from Supabase. A load *failure* is deliberately
+  // kept distinct from "no data yet" (a brand-new account, data === null).
+  // Treating a failed fetch as an empty account would be actively dangerous:
+  // the save effect below would then upsert that "empty" state and overwrite
+  // whatever real data exists server-side the moment it fires.
   useEffect(() => {
-    setLoading(true);
-    const existing = loadState(userId);
-    if (existing) {
-      setState(existing);
-    } else {
-      const blank = buildEmptyState();
-      setState(blank);
-      saveState(userId, blank);
+    let cancelled = false;
+    setStatus("loading");
+    setLoadError(null);
+    skipNextSaveRef.current = true;
+
+    loadState(userId).then((result) => {
+      if (cancelled) return;
+      if (!result.ok) {
+        setStatus("error");
+        setLoadError(result.message);
+        return;
+      }
+      setState(result.data ?? buildEmptyState());
+      setStatus("ready");
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, retryToken]);
+
+  // Debounced persistence back to Supabase on every change to `state` — but
+  // skips its own first run right after a (re)load, per skipNextSaveRef above.
+  // Only ever runs once status is "ready": while loading or errored, there's
+  // either no confirmed-safe state yet, or (in the error case) writing could
+  // clobber real remote data with whatever placeholder state exists locally.
+  useEffect(() => {
+    if (status !== "ready" || !state) return;
+    if (skipNextSaveRef.current) {
+      skipNextSaveRef.current = false;
+      return;
     }
-    setLoading(false);
-  }, [userId]);
-
-  // Debounced persistence back to localStorage on every change.
-  useEffect(() => {
-    if (!state) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => {
-      const ok = saveState(userId, state);
+    saveTimer.current = setTimeout(async () => {
+      const ok = await saveState(userId, state);
       setSaveError(!ok);
-    }, 400);
-    return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
-  }, [state, userId]);
+    }, 600);
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, [state, status, userId]);
 
   const actions: LifeOSActions = useMemo(() => ({
     toggleTask: (id) => setState((s) => s && { ...s, tasks: s.tasks.map((t) => t.id === id ? { ...t, done: !t.done } : t) }),
@@ -190,5 +219,5 @@ export function useLifeOSStore(userId: string) {
     }),
   }), []);
 
-  return { state, loading, saveError, actions };
+  return { state, status, loadError, saveError, actions, retry: () => setRetryToken((n) => n + 1) };
 }
