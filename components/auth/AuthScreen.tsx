@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Loader2, ArrowRight, ShieldAlert } from "lucide-react";
+import { Loader2, ArrowRight, ShieldCheck, Mail } from "lucide-react";
 import { signUp, logIn, AuthError, type PublicUser } from "@/lib/auth";
 import { inputCls, FieldLabel } from "@/components/shared/Primitives";
 
@@ -11,19 +11,56 @@ export default function AuthScreen({ onAuthed }: { onAuthed: (user: PublicUser) 
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Set once sign-up succeeds but Supabase requires email confirmation
+  // before the account can actually log in — this is the default project
+  // setting. Replaces the form with a "check your inbox" screen instead of
+  // pretending the person is logged in when they aren't yet.
+  const [confirmationSentTo, setConfirmationSentTo] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
     try {
-      const user = mode === "signup" ? await signUp(name, email, password) : await logIn(email, password);
-      onAuthed(user);
+      if (mode === "signup") {
+        const result = await signUp(name, email, password);
+        if (result.needsEmailConfirmation) {
+          setConfirmationSentTo(result.user.email);
+        } else {
+          onAuthed(result.user);
+        }
+      } else {
+        const user = await logIn(email, password);
+        onAuthed(user);
+      }
     } catch (err) {
       setError(err instanceof AuthError ? err.message : "Something went wrong. Try again.");
     } finally {
       setBusy(false);
     }
+  }
+
+  if (confirmationSentTo) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="w-full max-w-[380px] text-center">
+          <div className="surface rounded-2xl p-6">
+            <Mail size={20} style={{ color: "var(--accent)" }} className="mx-auto mb-3" />
+            <h2 className="font-display text-lg mb-2">Check your email</h2>
+            <p className="text-sm text-dim leading-relaxed mb-5">
+              We sent a confirmation link to <strong className="text-ink font-medium">{confirmationSentTo}</strong>.
+              Click it to activate your account, then come back here and log in.
+            </p>
+            <button
+              onClick={() => { setConfirmationSentTo(null); setMode("login"); setError(null); }}
+              className="btn-primary w-full py-2.5 rounded-lg text-sm"
+            >
+              Back to log in
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -76,11 +113,11 @@ export default function AuthScreen({ onAuthed }: { onAuthed: (user: PublicUser) 
         </div>
 
         <div className="flex items-start gap-2 mt-4 px-1">
-          <ShieldAlert size={13} className="text-faint mt-0.5 flex-shrink-0" />
+          <ShieldCheck size={13} className="text-faint mt-0.5 flex-shrink-0" />
           <p className="text-[11px] text-faint leading-relaxed">
-            This account is local to this browser only. Your data is stored in this device&apos;s
-            cache (localStorage) — nothing is sent to a server, there&apos;s no password recovery,
-            and clearing site data will erase it. Don&apos;t reuse a sensitive password.
+            Accounts and sign-in run on Supabase — your password never touches this app&apos;s own
+            code, it goes straight to Supabase over HTTPS. Your data is scoped to your account via
+            database-level security rules, so only you can read or write it.
           </p>
         </div>
       </div>

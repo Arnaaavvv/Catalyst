@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { AlertCircle, Plus } from "lucide-react";
-import { getSessionUser, logOut, type PublicUser } from "@/lib/auth";
+import { getSessionUser, logOut, onAuthChange, type PublicUser } from "@/lib/auth";
 import { useLifeOSStore } from "@/hooks/useLifeOSStore";
 import AuthScreen from "@/components/auth/AuthScreen";
 import NavRail from "@/components/layout/NavRail";
@@ -29,8 +29,23 @@ export default function App() {
   const [dark, setDark] = useState(true);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
+  // getSession() gives us the current session immediately on mount (it reads
+  // from Supabase's own local storage, no network round-trip needed); the
+  // onAuthChange subscription then keeps `user` in sync with anything that
+  // happens afterward — token refresh, or signing out in another tab, both
+  // update `user` here without a page reload.
   useEffect(() => {
-    setUser(getSessionUser());
+    let active = true;
+    getSessionUser().then((u) => {
+      if (active) setUser(u);
+    });
+    const unsubscribe = onAuthChange((u) => {
+      if (active) setUser(u);
+    });
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
   // The blocking script in layout.tsx already applied the correct class to
@@ -89,7 +104,7 @@ export default function App() {
 
   return (
     <AuthedApp user={user} dark={dark} setDark={setDark} view={view} setView={setView}
-      paletteOpen={paletteOpen} setPaletteOpen={setPaletteOpen} onLogOut={() => { logOut(); setUser(null); }} />
+      paletteOpen={paletteOpen} setPaletteOpen={setPaletteOpen} onLogOut={() => { setUser(null); void logOut(); }} />
   );
 }
 

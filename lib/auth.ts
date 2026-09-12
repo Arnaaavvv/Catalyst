@@ -1,128 +1,107 @@
-import type { User } from "./types";
-import { isStorageAvailable } from "./storage";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { supabase, isSupabaseConfigured } from "./supabaseClient";
 
-// Local-only accounts. There is no server: sign-up creates a profile in this
-// browser's localStorage, passwords are salted + hashed (SHA-256, Web Crypto)
-// before they ever touch storage, and a session just remembers which local
-// profile is active. This is enough to keep one person's data separated and
-// persistent on one device — it is NOT server-verified auth, has no password
-// reset, and offers no protection if someone else has access to this browser.
-// Don't reuse a real/sensitive password here.
+// Real accounts now, via Supabase Auth — not local-only. Passwords never
+// touch our code at all; they go straight to Supabase over HTTPS and we
+// only ever see back a session + user object. This module used to manage
+// its own localStorage-based user list and SHA-256 hashing (see git history
+// if you need to compare) — all of that is gone now, replaced by the
+// Supabase JS client below.
 
-const USERS_KEY = "catalyst:users";
-const SESSION_KEY = "catalyst:session";
-
-export type PublicUser = Omit<User, "passwordHash" | "salt">;
-
-function toPublic(u: User): PublicUser {
-  const { passwordHash, salt, ...rest } = u;
-  return rest;
-}
-
-function readUsers(): User[] {
-  if (!isStorageAvailable()) return [];
-  try {
-    const raw = window.localStorage.getItem(USERS_KEY);
-    return raw ? (JSON.parse(raw) as User[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeUsers(users: User[]): boolean {
-  if (!isStorageAvailable()) return false;
-  try {
-    window.localStorage.setItem(USERS_KEY, JSON.stringify(users));
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function bufToHex(buf: ArrayBuffer): string {
-  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-function randomSalt(): string {
-  const arr = new Uint8Array(16);
-  window.crypto.getRandomValues(arr);
-  return bufToHex(arr.buffer);
-}
-
-async function hashPassword(password: string, salt: string): Promise<string> {
-  const enc = new TextEncoder().encode(salt + ":" + password);
-  const digest = await window.crypto.subtle.digest("SHA-256", enc);
-  return bufToHex(digest);
+export interface PublicUser {
+  id: string;
+  name: string;
+  email: string;
 }
 
 export class AuthError extends Error {}
 
-export async function signUp(name: string, email: string, password: string): Promise<PublicUser> {
+function assertConfigured(): void {
+  if (!supabase) {
+    throw new AuthError(
+      "Supabase isn't configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local, then restart the dev server."
+    );
+  }
+}
+
+function toPublicUser(user: SupabaseUser): PublicUser {
+  const metaName = typeof user.user_metadata?.name === "string" ? user.user_metadata.name : null;
+  return {
+    id: user.id,
+    name: metaName || user.email?.split("@")[0] || "there",
+    email: user.email ?? "",
+  };
+}
+
+export interface SignUpResult {
+  user: PublicUser;
+  // True when Supabase requires clicking a confirmation link before the
+  // account can actually sign in (this is the default project setting).
+  // When true, `user` exists but there is NOT yet a usable session — the
+  // caller must not treat this as "logged in".
+  needsEmailConfirmation: boolean;
+}
+
+export async function signUp(name: string, email: string, password: string): Promise<SignUpResult> {
+  assertConfigured();
   const cleanEmail = email.trim().toLowerCase();
   if (!name.trim()) throw new AuthError("Enter your name.");
   if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) throw new AuthError("Enter a valid email.");
   if (password.length < 6) throw new AuthError("Password must be at least 6 characters.");
 
-  const users = readUsers();
-  if (users.some((u) => u.email === cleanEmail)) {
-    throw new AuthError("An account with this email already exists on this device.");
-  }
-
-  const salt = randomSalt();
-  const passwordHash = await hashPassword(password, salt);
-  const user: User = {
-    id: `user_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
-    name: name.trim(),
+  const { data, error } = await supabase!.auth.signUp({
     email: cleanEmail,
-    passwordHash,
-    salt,
-    createdAt: new Date().toISOString(),
-  };
+    password,
+    options: { data: { name: name.trim() } },
+  });
 
-  if (!writeUsers([...users, user])) {
-    throw new AuthError("Couldn't save your account — browser storage may be unavailable.");
+  if (error) throw new AuthError(error.message);
+  if (!data.user) throw new AuthError("Sign-up didn't return a user — please try again.");
+
+  // Supabase's documented (if slightly surprising) way of signaling "this
+  // email is already registered" without leaking which emails exist: it
+  // returns a 200 with a user object whose `identities` array is empty,
+  // instead of an error. Surface it as a normal error to the person instead.
+  if (data.user.identities && data.user.identities.length === 0) {
+    throw new AuthError("An account with this email already exists — try logging in instead.");
   }
-  setSession(user.id);
-  return toPublic(user);
+
+  return {
+    user: toPublicUser(data.user),
+    needsEmailConfirmation: !data.session,
+  };
 }
 
 export async function logIn(email: string, password: string): Promise<PublicUser> {
-  const cleanEmail = email.trim().toLowerCase();
-  const users = readUsers();
-  const user = users.find((u) => u.email === cleanEmail);
-  if (!user) throw new AuthError("No account with this email on this device.");
-  const hash = await hashPassword(password, user.salt);
-  if (hash !== user.passwordHash) throw new AuthError("Incorrect password.");
-  setSession(user.id);
-  return toPublic(user);
+  assertConfigured();
+  const { data, error } = await supabase!.auth.signInWithPassword({
+    email: email.trim().toLowerCase(),
+    password,
+  });
+  if (error) throw new AuthError(error.message);
+  if (!data.user) throw new AuthError("Login didn't return a user — please try again.");
+  return toPublicUser(data.user);
 }
 
-export function logOut(): void {
-  if (!isStorageAvailable()) return;
-  try {
-    window.localStorage.removeItem(SESSION_KEY);
-  } catch {
-    /* ignore */
-  }
+export async function logOut(): Promise<void> {
+  if (!supabase) return;
+  await supabase.auth.signOut();
 }
 
-function setSession(userId: string) {
-  if (!isStorageAvailable()) return;
-  try {
-    window.localStorage.setItem(SESSION_KEY, userId);
-  } catch {
-    /* ignore */
-  }
+export async function getSessionUser(): Promise<PublicUser | null> {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data, error } = await supabase.auth.getSession();
+  if (error || !data.session?.user) return null;
+  return toPublicUser(data.session.user);
 }
 
-export function getSessionUser(): PublicUser | null {
-  if (!isStorageAvailable()) return null;
-  try {
-    const userId = window.localStorage.getItem(SESSION_KEY);
-    if (!userId) return null;
-    const user = readUsers().find((u) => u.id === userId);
-    return user ? toPublic(user) : null;
-  } catch {
-    return null;
-  }
+// Subscribes to Supabase's own auth events (sign-in, sign-out, token
+// refresh, and — importantly — sign-out from *another tab*, since Supabase
+// broadcasts that across tabs). Returns an unsubscribe function for cleanup.
+export function onAuthChange(callback: (user: PublicUser | null) => void): () => void {
+  if (!supabase) return () => {};
+  const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    callback(session?.user ? toPublicUser(session.user) : null);
+  });
+  return () => data.subscription.unsubscribe();
 }

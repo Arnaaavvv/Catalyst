@@ -103,15 +103,6 @@ export interface LifeOSState {
 
 export type MomentumState = "accelerating" | "steady" | "recovering" | "stalled";
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  passwordHash: string;
-  salt: string;
-  createdAt: string;
-}
-
 export interface QuickAddResult {
   type: "task" | "habit" | "health" | "goal" | "assignment" | "study";
   fields: Record<string, string | number | null>;

@@ -17,6 +17,18 @@ create table if not exists public.life_os_data (
 -- most for correctness; everything else is just structure.
 alter table public.life_os_data enable row level security;
 
+-- Supabase changed how new projects work as of 2026-05-30: newly created
+-- tables no longer automatically grant privileges to the `authenticated`
+-- role (previously this was automatic, before it became an opt-in dashboard
+-- setting). Without these grants, RLS policies below would never even get
+-- evaluated — PostgREST would reject the query at the table-privilege level
+-- before RLS has a chance to run. This is a table-level permission (can this
+-- role touch this table at all), separate from RLS (which specific rows).
+-- Deliberately NOT granting anything to `anon` — only signed-in users should
+-- ever reach this table.
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on public.life_os_data to authenticated;
+
 drop policy if exists "select own data" on public.life_os_data;
 create policy "select own data"
   on public.life_os_data for select
