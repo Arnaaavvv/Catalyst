@@ -138,7 +138,7 @@ function AuthedApp({
   return (
     <>
       <div className="flex">
-        <NavRail view={view} setView={setView} dark={dark} setDark={setDark} user={user} onLogOut={onLogOut} onClearData={actions.clearAllData} onUserUpdate={onUserUpdate} />
+        <NavRail view={view} setView={setView} dark={dark} setDark={setDark} user={user} state={state} onLogOut={onLogOut} onClearData={actions.clearAllData} onUserUpdate={onUserUpdate} />
         <div className="flex-1 min-w-0">
           <MobileNav view={view} setView={setView} />
           <TopBar onQuickAdd={() => setPaletteOpen(true)} />

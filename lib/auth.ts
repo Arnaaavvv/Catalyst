@@ -20,6 +20,8 @@ export interface PublicUser {
   username: string | null;
   dob: string | null; // ISO date (YYYY-MM-DD) — source of truth; age is derived from this, never stored
   sex: Sex | null;
+  bio: string | null;
+  avatarUrl: string | null;
 }
 
 export class AuthError extends Error {}
@@ -48,15 +50,21 @@ function baseUser(user: SupabaseUser): Pick<PublicUser, "id" | "name" | "email">
   };
 }
 
-async function fetchProfile(userId: string): Promise<Pick<PublicUser, "username" | "dob" | "sex">> {
-  if (!supabase) return { username: null, dob: null, sex: null };
+async function fetchProfile(userId: string): Promise<Pick<PublicUser, "username" | "dob" | "sex" | "bio" | "avatarUrl">> {
+  if (!supabase) return { username: null, dob: null, sex: null, bio: null, avatarUrl: null };
   const { data } = await supabase
     .from("profiles")
-    .select("username, dob, sex")
+    .select("username, dob, sex, bio, avatar_url")
     .eq("user_id", userId)
     .maybeSingle(); // no row yet is normal for an account that hasn't set a profile — not an error
   const sex = data?.sex && (VALID_SEX as string[]).includes(data.sex) ? (data.sex as Sex) : null;
-  return { username: data?.username ?? null, dob: data?.dob ?? null, sex };
+  return {
+    username: data?.username ?? null,
+    dob: data?.dob ?? null,
+    sex,
+    bio: data?.bio ?? null,
+    avatarUrl: data?.avatar_url ?? null,
+  };
 }
 
 async function toPublicUser(user: SupabaseUser): Promise<PublicUser> {
@@ -145,7 +153,10 @@ export interface ProfileUpdate {
   username: string; // "" clears it back to unset
   dob: string; // "" clears it back to unset
   sex: Sex | "";
+  bio: string; // "" clears it back to unset
 }
+
+export const BIO_MAX_LENGTH = 300;
 
 // Writes to the `profiles` table — see supabase/schema.sql for the UNIQUE
 // index on username. We don't "check availability" first and then write;
@@ -162,10 +173,11 @@ export async function updateProfile(userId: string, fields: ProfileUpdate): Prom
   }
   const dob = fields.dob || null;
   const sex = fields.sex || null;
+  const bio = fields.bio.trim().slice(0, BIO_MAX_LENGTH) || null;
 
   const { error } = await supabase!
     .from("profiles")
-    .upsert({ user_id: userId, username, dob, sex }, { onConflict: "user_id" });
+    .upsert({ user_id: userId, username, dob, sex, bio }, { onConflict: "user_id" });
 
   if (error) {
     if (error.code === "23505") {
@@ -178,5 +190,47 @@ export async function updateProfile(userId: string, fields: ProfileUpdate): Prom
   if (authError || !authData.user) {
     throw new AuthError("Saved, but couldn't refresh your account — try reloading the page.");
   }
-  return { ...baseUser(authData.user), username, dob, sex: sex as Sex | null };
+  const current = await fetchProfile(userId); // picks up avatarUrl too, which this function doesn't touch
+  return { ...baseUser(authData.user), username, dob, sex: sex as Sex | null, bio, avatarUrl: current.avatarUrl };
+}
+
+const MAX_AVATAR_BYTES = 5 * 1024 * 1024; // 5MB
+const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+// Uploads to Storage first, then records the resulting URL on the profile
+// row — two separate writes, not one atomic operation. If the DB write below
+// fails after a successful upload, the file exists in Storage but nothing
+// points to it yet; re-uploading (same deterministic path, upsert: true)
+// just overwrites it next time, so this can't accumulate orphaned files or
+// leave the profile in a broken state — worst case, a retry fixes it.
+export async function uploadAvatar(userId: string, file: File): Promise<string> {
+  assertConfigured();
+
+  if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+    throw new AuthError("Please choose a JPEG, PNG, WebP, or GIF image.");
+  }
+  if (file.size > MAX_AVATAR_BYTES) {
+    throw new AuthError("That image is too large — please choose one under 5MB.");
+  }
+
+  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  const path = `${userId}/avatar.${ext}`;
+
+  const { error: uploadError } = await supabase!.storage
+    .from("avatars")
+    .upload(path, file, { upsert: true, cacheControl: "3600" });
+  if (uploadError) throw new AuthError(uploadError.message);
+
+  const { data: urlData } = supabase!.storage.from("avatars").getPublicUrl(path);
+  // The path is stable (same filename every re-upload via upsert), so the
+  // public URL alone wouldn't change and browsers/CDNs would keep serving a
+  // cached old image — the timestamp forces a fresh fetch after every upload.
+  const bustCacheUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
+  const { error: dbError } = await supabase!
+    .from("profiles")
+    .upsert({ user_id: userId, avatar_url: bustCacheUrl }, { onConflict: "user_id" });
+  if (dbError) throw new AuthError(dbError.message);
+
+  return bustCacheUrl;
 }

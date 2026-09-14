@@ -3,14 +3,15 @@ import { useState } from "react";
 import { Sun, Moon, LogOut, RotateCcw, UserCog } from "lucide-react";
 import { NAV_ITEMS } from "@/lib/domains";
 import type { PublicUser } from "@/lib/auth";
+import type { LifeOSState } from "@/lib/types";
 import ConfirmModal from "@/components/shared/ConfirmModal";
-import ManageAccountModal from "@/components/account/ManageAccountModal";
+import AccountPage from "@/components/account/AccountPage";
 
 export default function NavRail({
-  view, setView, dark, setDark, user, onLogOut, onClearData, onUserUpdate,
+  view, setView, dark, setDark, user, state, onLogOut, onClearData, onUserUpdate,
 }: {
   view: string; setView: (v: string) => void; dark: boolean; setDark: (fn: (d: boolean) => boolean) => void;
-  user: PublicUser; onLogOut: () => void; onClearData: () => void; onUserUpdate: (user: PublicUser) => void;
+  user: PublicUser; state: LifeOSState; onLogOut: () => void; onClearData: () => void; onUserUpdate: (user: PublicUser) => void;
 }) {
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
@@ -77,7 +78,7 @@ export default function NavRail({
       )}
 
       {manageAccountOpen && (
-        <ManageAccountModal user={user} onClose={() => setManageAccountOpen(false)} onUpdated={onUserUpdate} />
+        <AccountPage user={user} state={state} onClose={() => setManageAccountOpen(false)} onUpdated={onUserUpdate} />
       )}
     </div>
   );
