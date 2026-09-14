@@ -1,104 +1,91 @@
-# Catalyst
+# ⚡ Catalyst
 
-A personal operating system — Health, Habits, Goals, Tasks, and Academics — in one
-connected product, not a pile of dashboards. Built with Next.js 16 (App Router,
-Turbopack), React 18, TypeScript, and Tailwind.
+**Health, Habits, Goals, Tasks, and Academics — one connected system, not four separate apps.**
 
-## Quick start
+[![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=black)](https://supabase.com)
+[![Gemini API](https://img.shields.io/badge/Gemini_API-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)](https://ai.google.dev)
+[![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com)
+
+---
+
+Most productivity apps make you choose: a habit tracker, a task manager, a goal board, a grade log. Catalyst treats them as one graph instead of four silos — a habit feeds a goal, a goal is made of tasks, a task belongs to a subject, and your health metrics sit next to all of it because none of the rest works if you're not sleeping.
+
+It's built for one user (me), which is a feature, not a limitation — no multi-tenant compromises, no generic settings nobody needs, no feature flags for edge cases that will never happen.
+
+## 🔴 Live Demo
+
+**[Try it here](https://catalyst-yourname.vercel.app)**
+
+Sign up, and your Today view, Goals map, and Academics module are ready to go — no seed data required to see it work.
+
+## ✨ Features
+
+- **📅 Today view** — a single daily surface: tasks due, habits to check off, and what's linked to what
+- **🌌 Goals constellation map** — goals rendered as a node graph, band heights scaled to how many habits/tasks actually feed each one, so nothing collides regardless of how lopsided your goals are
+- **⚡ Quick Add** — type a sentence, Gemini parses it into a typed task/habit/event; falls back to a local regex parser if no API key is set, so it never just breaks
+- **📈 Life Pulse & Momentum Dials** — rolling visualizations of how health, habits, and goals are trending, not just static snapshots
+- **🎓 Academics** — subjects, assignments, and grades live in the same data model as everything else
+- **🌗 Dark mode** — applied at the document root with a blocking anti-flash script, so there's no light-mode flash on load
+- **☁️ Local-first, cloud-synced** — Supabase-backed with Row Level Security, so your data is yours
+
+## 🛠 Tech Stack
+
+| Layer | Stack |
+|---|---|
+| Framework | Next.js 16 (App Router, Turbopack) + TypeScript |
+| Styling | Tailwind CSS, Lucide icons |
+| Backend | Supabase (Postgres, Auth, Row Level Security) |
+| AI parsing | Gemini API, server-side, with a local regex fallback |
+| Hosting | Vercel |
+
+## 🚀 Getting Started
 
 ```bash
+git clone https://github.com/yourusername/catalyst.git
+cd catalyst
 npm install
+```
+
+Create `.env.local`:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+GEMINI_API_KEY=your-gemini-key   # optional — falls back to regex parsing if omitted
+```
+
+Run the schema (`supabase/schema.sql`) in your Supabase project's SQL editor — note the [May 2026 privilege change](#): `GRANT` statements for the `authenticated` role must be explicit, they're no longer automatic. Then:
+
+```bash
 npm run dev
 ```
 
-Open http://localhost:3000, sign up, and you're in — a seeded demo dataset loads
-automatically so the app feels alive on first login.
+Open `http://localhost:3000`.
 
-## How data & accounts work (read this)
-
-**There is no backend database.** Accounts and data live entirely in this
-browser's cache (`localStorage`):
-
-- **Sign up / log in** creates a local profile on this device. Passwords are
-  salted and hashed (SHA-256 via the Web Crypto API) before they touch storage —
-  but this is *not* server-verified auth. There's no password reset, no
-  cross-device sync, and anyone with access to this browser profile can see the
-  account list (not the passwords). Don't reuse a sensitive password.
-- **Your tracked data** (tasks, habits, goals, health logs, academics) is stored
-  under a per-user key in `localStorage`, so switching accounts on the same
-  device cleanly switches datasets.
-- Clearing site data / browser cache **permanently deletes everything**. This
-  is by design (you asked for cache-based storage), but it's worth knowing.
-- If you outgrow this, `lib/storage.ts` and `lib/auth.ts` are the only two
-  files that talk to `localStorage` — swapping them for real API calls to a
-  server + database is the entire migration path; nothing else in the app
-  needs to change.
-
-## Natural-language Quick Add
-
-`⌘K` / `Ctrl+K` opens the command palette. Typing something like
-*"Study physics for 45 minutes tomorrow"* and hitting Enter sends it to a
-server route (`app/api/parse/route.ts`) that calls the Gemini API to turn it
-into structured fields, shown to you for confirmation before anything is
-saved. This requires a free API key:
-
-```bash
-cp .env.example .env.local
-# then edit .env.local and set:
-# GEMINI_API_KEY=AIza...
-```
-
-Get a key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) —
-no billing setup needed for the free tier. Restart `npm run dev` after adding it.
-
-**Without a key, Quick Add still works** — it falls back automatically to a
-local heuristic parser (`lib/quickadd.ts`, regex-based, runs entirely in the
-browser). The AI path is a nice-to-have, not a dependency.
-
-The manual quick-add types (Task / Habit / Health / Goal / Assignment / Study
-session) in the same palette never touch the network at all.
-
-## Project structure
+## 📁 Project Structure
 
 ```
-app/
-  page.tsx              → renders the root <App/>
-  layout.tsx, globals.css → design tokens, fonts, global styles
-  api/parse/route.ts    → server-side NL parsing (holds the API key)
-lib/
-  types.ts              → all shared data shapes
-  seed.ts                → realistic demo data generator
-  derived.ts             → momentum, streaks, timeline — all computed, nothing duplicated
-  domains.ts              → domain colors/icons/nav config
-  date.ts, quickadd.ts, quickAddTypes.ts
-  auth.ts                → local sign-up/login (hash + localStorage)
-  storage.ts              → per-user localStorage read/write
-hooks/
-  useLifeOSStore.ts      → the single state tree + all mutating actions
-components/
-  App.tsx                → auth gate + shell + view router
-  auth/AuthScreen.tsx
-  layout/                → NavRail, MobileNav, TopBar
-  shared/                 → MomentumDial, LifePulse, Sparkline, primitives
-  quickadd/CommandPalette.tsx
-  views/                  → Today, Health, Habits, Goals, Tasks, Academics, Insights, Timeline
+catalyst/
+├── app/              # routes, layouts, API handlers (app/api/parse for Quick Add)
+├── components/       # typed UI components — modals render via a shared Portal
+├── hooks/            # state + data hooks
+├── lib/              # supabaseClient, parsing utilities, shared logic
+└── supabase/
+    └── schema.sql    # tables, RLS policies, grants
 ```
 
-## Design concepts specific to this app
+## ⚠️ Limitations
 
-- **Life Pulse** — an EKG-style strip, one lane per domain, where a completed
-  habit/task/health log/milestone/study session shows up as a heartbeat spike
-  on its day.
-- **Momentum Dial** — a real needle gauge (not a progress bar): *accelerating /
-  steady / recovering / stalled*, computed by comparing a trailing window
-  against the window before it — per domain and per goal.
-- **Constellation Map** (Goals) — goals as orbiting bodies sized by milestone
-  completion, linked habits/tasks as satellites, dashed threads connecting them.
-- **Timeline** — a vertical ledger grouped by day rather than a flat activity log.
+- Built and tuned for single-user use — there's no multi-tenant workspace model.
+- Quick Add parsing quality depends on the sentence structure you give it; the regex fallback covers common phrasing but isn't a substitute for the Gemini path.
+- Username uniqueness enforcement is mid-migration from `user_metadata` to a dedicated `profiles` table — collisions aren't fully guarded yet.
 
-## Notes on the TypeScript conversion
+## ☁️ Deployment
 
-This started as a single-file interactive prototype and was rebuilt here as a
-properly modular Next.js project — typed data model, one state tree with pure
-derived-data functions (no duplicated calculations across views), and a real
-client/server boundary for the one feature (NL parsing) that needs a secret key.
+Live in production on Vercel, with Supabase handling Postgres, Auth, and Row Level Security. Set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `GEMINI_API_KEY` as environment variables in the Vercel project settings.
+
+---
+*One system. Every part of your day, actually connected.*
