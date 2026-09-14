@@ -64,3 +64,58 @@ drop trigger if exists set_life_os_data_updated_at on public.life_os_data;
 create trigger set_life_os_data_updated_at
   before update on public.life_os_data
   for each row execute function public.set_updated_at();
+
+-- Profile fields (username, date of birth, sex) live here rather than in
+-- Supabase Auth's user_metadata, specifically so `username` can carry a real
+-- UNIQUE constraint. user_metadata is just an arbitrary JSON blob with no
+-- database-level constraints at all — there is no way to enforce uniqueness
+-- on a value stored there. A real column with a unique index is the only
+-- correct way to guarantee two accounts can't claim the same username,
+-- and it's race-condition-free: Postgres rejects the second write outright
+-- rather than the app having to "check first" (which two simultaneous
+-- signups could both pass, then both succeed — a classic TOCTOU bug).
+create table if not exists public.profiles (
+  user_id    uuid primary key references auth.users(id) on delete cascade,
+  username   text,
+  dob        date,
+  sex        text check (sex in ('female', 'male', 'other')),
+  updated_at timestamptz not null default now()
+);
+
+-- Case-insensitive uniqueness ("Arnav" and "arnav" are the same username) as
+-- an expression index, rather than a plain `unique` column constraint. Users
+-- with no username set (NULL) don't conflict with each other or with
+-- anyone — Postgres treats NULL as distinct from every other NULL for
+-- uniqueness purposes, which is exactly the behavior we want here.
+create unique index if not exists profiles_username_lower_idx
+  on public.profiles (lower(username));
+
+alter table public.profiles enable row level security;
+
+grant select, insert, update, delete on public.profiles to authenticated;
+
+drop policy if exists "select own profile" on public.profiles;
+create policy "select own profile"
+  on public.profiles for select
+  using (auth.uid() = user_id);
+
+drop policy if exists "insert own profile" on public.profiles;
+create policy "insert own profile"
+  on public.profiles for insert
+  with check (auth.uid() = user_id);
+
+drop policy if exists "update own profile" on public.profiles;
+create policy "update own profile"
+  on public.profiles for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+drop policy if exists "delete own profile" on public.profiles;
+create policy "delete own profile"
+  on public.profiles for delete
+  using (auth.uid() = user_id);
+
+drop trigger if exists set_profiles_updated_at on public.profiles;
+create trigger set_profiles_updated_at
+  before update on public.profiles
+  for each row execute function public.set_updated_at();

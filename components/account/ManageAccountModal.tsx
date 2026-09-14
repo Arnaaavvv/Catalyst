@@ -22,7 +22,7 @@ export default function ManageAccountModal({
     setBusy(true);
     setError(null);
     try {
-      const updated = await updateProfile({ username, dob, sex });
+      const updated = await updateProfile(user.id, { username, dob, sex });
       onUpdated(updated);
       onClose();
     } catch (err) {
@@ -46,6 +46,7 @@ export default function ManageAccountModal({
             <div>
               <FieldLabel>Username</FieldLabel>
               <input className={inputCls} value={username} onChange={(e) => setUsername(e.target.value)} placeholder="e.g. arnav" />
+              <p className="text-[10px] text-faint mt-1">3–20 characters, letters/numbers/underscores, must be unique.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">

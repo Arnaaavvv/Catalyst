@@ -3,10 +3,13 @@ import { supabase, isSupabaseConfigured } from "./supabaseClient";
 
 // Real accounts now, via Supabase Auth — not local-only. Passwords never
 // touch our code at all; they go straight to Supabase over HTTPS and we
-// only ever see back a session + user object. This module used to manage
-// its own localStorage-based user list and SHA-256 hashing (see git history
-// if you need to compare) — all of that is gone now, replaced by the
-// Supabase JS client below.
+// only ever see back a session + user object.
+//
+// Profile fields (username, dob, sex) live in a separate `profiles` table
+// (see supabase/schema.sql), not in Supabase Auth's user_metadata — that's
+// specifically so `username` can carry a real UNIQUE constraint, which a
+// JSON metadata blob has no way to enforce. `name` and `email` still come
+// straight from the auth user object, unchanged.
 
 export type Sex = "female" | "male" | "other";
 
@@ -30,19 +33,35 @@ function assertConfigured(): void {
 }
 
 const VALID_SEX: Sex[] = ["female", "male", "other"];
+const USERNAME_PATTERN = /^[a-zA-Z0-9_]{3,20}$/;
 
-function toPublicUser(user: SupabaseUser): PublicUser {
-  const meta = user.user_metadata ?? {};
-  const metaName = typeof meta.name === "string" ? meta.name : null;
-  const metaSex = typeof meta.sex === "string" && (VALID_SEX as string[]).includes(meta.sex) ? (meta.sex as Sex) : null;
+// The parts of PublicUser that come straight from the Supabase auth user
+// object with no extra query — kept separate from the profile fields below
+// so signUp/logIn/getSessionUser can return fast without always needing a
+// round trip to the profiles table too.
+function baseUser(user: SupabaseUser): Pick<PublicUser, "id" | "name" | "email"> {
+  const metaName = typeof user.user_metadata?.name === "string" ? user.user_metadata.name : null;
   return {
     id: user.id,
     name: metaName || user.email?.split("@")[0] || "there",
     email: user.email ?? "",
-    username: typeof meta.username === "string" && meta.username.trim() ? meta.username : null,
-    dob: typeof meta.dob === "string" && meta.dob ? meta.dob : null,
-    sex: metaSex,
   };
+}
+
+async function fetchProfile(userId: string): Promise<Pick<PublicUser, "username" | "dob" | "sex">> {
+  if (!supabase) return { username: null, dob: null, sex: null };
+  const { data } = await supabase
+    .from("profiles")
+    .select("username, dob, sex")
+    .eq("user_id", userId)
+    .maybeSingle(); // no row yet is normal for an account that hasn't set a profile — not an error
+  const sex = data?.sex && (VALID_SEX as string[]).includes(data.sex) ? (data.sex as Sex) : null;
+  return { username: data?.username ?? null, dob: data?.dob ?? null, sex };
+}
+
+async function toPublicUser(user: SupabaseUser): Promise<PublicUser> {
+  const [base, profile] = [baseUser(user), await fetchProfile(user.id)];
+  return { ...base, ...profile };
 }
 
 export interface SignUpResult {
@@ -79,7 +98,7 @@ export async function signUp(name: string, email: string, password: string): Pro
   }
 
   return {
-    user: toPublicUser(data.user),
+    user: await toPublicUser(data.user),
     needsEmailConfirmation: !data.session,
   };
 }
@@ -113,7 +132,11 @@ export async function getSessionUser(): Promise<PublicUser | null> {
 export function onAuthChange(callback: (user: PublicUser | null) => void): () => void {
   if (!supabase) return () => {};
   const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-    callback(session?.user ? toPublicUser(session.user) : null);
+    if (!session?.user) {
+      callback(null);
+      return;
+    }
+    toPublicUser(session.user).then(callback);
   });
   return () => data.subscription.unsubscribe();
 }
@@ -124,21 +147,36 @@ export interface ProfileUpdate {
   sex: Sex | "";
 }
 
-// Profile fields live in Supabase Auth's own user_metadata — not a separate
-// table. There's no dedicated "profiles" table for this app, so there's also
-// no uniqueness constraint on username; two accounts could pick the same
-// one. Fine for a personal-use app with no public/social surface, but worth
-// knowing if that ever changes.
-export async function updateProfile(fields: ProfileUpdate): Promise<PublicUser> {
+// Writes to the `profiles` table — see supabase/schema.sql for the UNIQUE
+// index on username. We don't "check availability" first and then write;
+// that has a race (two people could both check, both see it's free, both
+// claim it). Instead we just attempt the write and let Postgres's unique
+// constraint be the actual arbiter — error code 23505 means someone already
+// has it, full stop, no race possible.
+export async function updateProfile(userId: string, fields: ProfileUpdate): Promise<PublicUser> {
   assertConfigured();
-  const { data, error } = await supabase!.auth.updateUser({
-    data: {
-      username: fields.username.trim() || null,
-      dob: fields.dob || null,
-      sex: fields.sex || null,
-    },
-  });
-  if (error) throw new AuthError(error.message);
-  if (!data.user) throw new AuthError("Update didn't return a user — please try again.");
-  return toPublicUser(data.user);
+
+  const username = fields.username.trim() || null;
+  if (username && !USERNAME_PATTERN.test(username)) {
+    throw new AuthError("Usernames are 3–20 characters: letters, numbers, and underscores only.");
+  }
+  const dob = fields.dob || null;
+  const sex = fields.sex || null;
+
+  const { error } = await supabase!
+    .from("profiles")
+    .upsert({ user_id: userId, username, dob, sex }, { onConflict: "user_id" });
+
+  if (error) {
+    if (error.code === "23505") {
+      throw new AuthError("That username is already taken — try a different one.");
+    }
+    throw new AuthError(error.message);
+  }
+
+  const { data: authData, error: authError } = await supabase!.auth.getUser();
+  if (authError || !authData.user) {
+    throw new AuthError("Saved, but couldn't refresh your account — try reloading the page.");
+  }
+  return { ...baseUser(authData.user), username, dob, sex: sex as Sex | null };
 }

@@ -39,7 +39,7 @@ export default function NavRail({
       <div>
         <button onClick={() => setManageAccountOpen(true)}
           className="row-hover w-full text-left px-2.5 py-2 rounded-lg mb-1">
-          <div className="text-xs font-medium truncate">{user.name}</div>
+          <div className="text-xs font-medium truncate">{user.username || user.name}</div>
           <div className="text-[10px] text-faint truncate">{user.email}</div>
         </button>
         <button onClick={() => setManageAccountOpen(true)} className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-dim row-hover">
