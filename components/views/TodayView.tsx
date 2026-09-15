@@ -47,7 +47,7 @@ export default function TodayView({ state, actions }: { state: LifeOSState; acti
           <Sparkles size={18} style={{ color: "var(--accent)" }} className="mb-3" />
           <h2 className="font-display text-xl mb-2">This is your blank slate</h2>
           <p className="text-sm text-dim leading-relaxed mb-5">
-            Add your own tasks, habits, goals, and health logs with <span className="kbd">⌘K</span> — or,
+            Add your own tasks, habits, goals, and health logs with <span className="kbd">Ctrl + K</span> — or,
             if you'd rather see the app fully populated first, load the example template below. It's a
             complete, clearly-separate dataset you can clear at any time; it won't merge with anything you add yourself.
           </p>
@@ -83,7 +83,7 @@ export default function TodayView({ state, actions }: { state: LifeOSState; acti
                 <span className="text-xs text-dim">{doneToday} done{overdue ? ` · ${overdue} overdue` : ""}</span>
               </div>
               {todaysTasks.length === 0 ? (
-                <EmptyState icon={CheckSquare} title="Nothing on deck" hint="Add a task with ⌘K, or enjoy the clear day." />
+                <EmptyState icon={CheckSquare} title="Nothing on deck" hint="Add a task with Ctrl + K, or enjoy the clear day." />
               ) : (
                 <div className="space-y-0.5">
                   {todaysTasks.map((t) => (
