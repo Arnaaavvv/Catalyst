@@ -115,8 +115,7 @@ export default function AuthScreen({ onAuthed }: { onAuthed: (user: PublicUser) 
         <div className="flex items-start gap-2 mt-4 px-1">
           <ShieldCheck size={13} className="text-faint mt-0.5 flex-shrink-0" />
           <p className="text-[11px] text-faint leading-relaxed">
-            Accounts and sign-in run on Supabase — your password never touches this app&apos;s own
-            code, it goes straight to Supabase over HTTPS. Your data is scoped to your account via
+            Your data is scoped to your account via
             database-level security rules, so only you can read or write it.
           </p>
         </div>

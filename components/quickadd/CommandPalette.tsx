@@ -176,7 +176,7 @@ function QuickForm({
         <div className="space-y-3">
           <FieldLabel>Which habit?</FieldLabel>
           {state.habits.length === 0 ? (
-            <p className="text-xs text-dim">No habits yet — add one from the Habits page first.</p>
+            <p className="text-xs text-dim">No habits yet, add one from the Habits page first.</p>
           ) : (
             <div className="space-y-1.5">
               {state.habits.map((h) => (
@@ -216,7 +216,7 @@ function QuickForm({
       {type.id === "assignment" && (
         <div className="space-y-3">
           {state.subjects.length === 0 ? (
-            <p className="text-xs text-dim">No subjects yet — add one from the Academics page first.</p>
+            <p className="text-xs text-dim">No subjects yet, add one from the Academics page first.</p>
           ) : (
             <>
               <div><FieldLabel>Title</FieldLabel><input autoFocus className={inputCls} value={values.title} onChange={(e) => set("title", e.target.value)} placeholder="Assignment name" /></div>
@@ -235,7 +235,7 @@ function QuickForm({
       {type.id === "study" && (
         <div className="space-y-3">
           {state.subjects.length === 0 ? (
-            <p className="text-xs text-dim">No subjects yet — add one from the Academics page first.</p>
+            <p className="text-xs text-dim">No subjects yet, add one from the Academics page first.</p>
           ) : (
             <>
               <div><FieldLabel>Subject</FieldLabel>

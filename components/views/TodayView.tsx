@@ -61,7 +61,7 @@ export default function TodayView({ state, actions }: { state: LifeOSState; acti
             <div className="surface rounded-xl p-3.5 mb-5 flex items-center gap-3" style={{ borderColor: "var(--accent)" }}>
               <Info size={15} style={{ color: "var(--accent)" }} className="flex-shrink-0" />
               <p className="text-xs text-dim flex-1">
-                You&apos;re viewing the <strong className="text-ink font-medium">example template</strong> —
+                You&apos;re viewing the <strong className="text-ink font-medium">example template</strong>,
                 sample data to explore the app. Clear it whenever you&apos;re ready to track your own.
               </p>
               <button onClick={() => setClearConfirmOpen(true)}

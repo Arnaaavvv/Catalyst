@@ -95,14 +95,14 @@ export async function signUp(name: string, email: string, password: string): Pro
   });
 
   if (error) throw new AuthError(error.message);
-  if (!data.user) throw new AuthError("Sign-up didn't return a user — please try again.");
+  if (!data.user) throw new AuthError("Sign-up didn't return a user, please try again.");
 
   // Supabase's documented (if slightly surprising) way of signaling "this
   // email is already registered" without leaking which emails exist: it
   // returns a 200 with a user object whose `identities` array is empty,
   // instead of an error. Surface it as a normal error to the person instead.
   if (data.user.identities && data.user.identities.length === 0) {
-    throw new AuthError("An account with this email already exists — try logging in instead.");
+    throw new AuthError("An account with this email already exists, try logging in instead.");
   }
 
   return {
@@ -118,7 +118,7 @@ export async function logIn(email: string, password: string): Promise<PublicUser
     password,
   });
   if (error) throw new AuthError(error.message);
-  if (!data.user) throw new AuthError("Login didn't return a user — please try again.");
+  if (!data.user) throw new AuthError("Login didn't return a user, please try again.");
   return toPublicUser(data.user);
 }
 
@@ -169,7 +169,7 @@ export async function updateProfile(userId: string, fields: ProfileUpdate): Prom
 
   const username = fields.username.trim() || null;
   if (username && !USERNAME_PATTERN.test(username)) {
-    throw new AuthError("Usernames are 3–20 characters: letters, numbers, and underscores only.");
+    throw new AuthError("Usernames are 3–20 characters: letters, numbers and underscores only.");
   }
   const dob = fields.dob || null;
   const sex = fields.sex || null;
@@ -207,10 +207,10 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
   assertConfigured();
 
   if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
-    throw new AuthError("Please choose a JPEG, PNG, WebP, or GIF image.");
+    throw new AuthError("Please choose a JPEG, PNG or WebP image.");
   }
   if (file.size > MAX_AVATAR_BYTES) {
-    throw new AuthError("That image is too large — please choose one under 5MB.");
+    throw new AuthError("That image is too large, please choose one under 5MB.");
   }
 
   const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";

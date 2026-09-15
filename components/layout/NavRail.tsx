@@ -60,7 +60,7 @@ export default function NavRail({
       {clearConfirmOpen && (
         <ConfirmModal
           title="Clear all data?"
-          message="This permanently deletes every task, habit, goal, health log, and academic record on this account — including any example template data. This can't be undone."
+          message="This permanently deletes every task, habit, goal, health log and academic record on this account including any example template data. This can't be undone."
           confirmLabel="Clear everything"
           onCancel={() => setClearConfirmOpen(false)}
           onConfirm={() => { onClearData(); setClearConfirmOpen(false); }}
@@ -70,7 +70,7 @@ export default function NavRail({
       {logoutConfirmOpen && (
         <ConfirmModal
           title="Log out?"
-          message="You'll need to log back in to see your data again. Nothing is deleted — this just ends your session."
+          message="You'll need to log back in to see your data again."
           confirmLabel="Log out"
           onCancel={() => setLogoutConfirmOpen(false)}
           onConfirm={() => { setLogoutConfirmOpen(false); onLogOut(); }}

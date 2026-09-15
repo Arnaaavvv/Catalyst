@@ -36,7 +36,7 @@ assignment: {"title":string,"subject":string,"due":"YYYY-MM-DD"|null}
 Resolve relative dates ("tomorrow", "next friday") against today's date. Pick the single best-fitting type.`;
 
   try {
-    const model = process.env.GEMINI_MODEL || "gemini-flash-latest";
+    const model = process.env.GEMINI_MODEL || "gemini-3.1-flash-lite";
     const upstream = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
       {

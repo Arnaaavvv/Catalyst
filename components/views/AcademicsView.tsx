@@ -97,7 +97,7 @@ export default function AcademicsView({ state, actions }: { state: LifeOSState; 
             <div className="surface rounded-xl p-4">
               <div className="font-mono text-[10px] text-faint tracking-wide mb-3">ASSIGNMENTS & EXAMS</div>
               {state.assignments.length === 0 ? (
-                <div className="text-xs text-dim py-4">No assignments tracked yet. Add one with ⌘K.</div>
+                <div className="text-xs text-dim py-4">No assignments tracked yet. Add one with Ctrl + K.</div>
               ) : (
                 <div className="space-y-0.5">
                   {[...state.assignments].sort((a, b) => (a.due < b.due ? -1 : 1)).map((a) => {

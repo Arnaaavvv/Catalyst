@@ -121,7 +121,7 @@ export default function GoalsView({ state, actions }: { state: LifeOSState; acti
 
       {!hasGoals ? (
         <EmptyState icon={Target} title="No goals yet"
-          hint={'Add your first one with "New goal" above — milestones and linked habits/tasks will show up here as a relationship map.'} />
+          hint={'Add your first one with "New goal" above, milestones and linked habits/tasks will show up here as a relationship map.'} />
       ) : (
         <>
           <div className="surface rounded-xl p-4 mb-5">

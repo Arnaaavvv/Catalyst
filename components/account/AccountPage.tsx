@@ -176,12 +176,12 @@ export default function AccountPage({
                   <div className="font-display text-lg mb-1">{peakEra.label}</div>
                   <p className="text-xs text-dim leading-relaxed">
                     Your habit consistency rose {peakEra.improvementPct} percentage points that week compared to
-                    the one before it — the sharpest turnaround in your tracked history.
+                    the one before it, the sharpest turnaround in your tracked history.
                   </p>
                 </>
               ) : (
                 <p className="text-xs text-dim leading-relaxed">
-                  Not enough habit history yet to identify a turning point — keep logging and check back in a
+                  Not enough habit history yet to identify a turning point, keep logging and check back in a
                   couple of weeks.
                 </p>
               )}
