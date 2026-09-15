@@ -124,3 +124,19 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 input::placeholder, textarea::placeholder { color: var(--ink-faint); }
 
 .nav-scroll::-webkit-scrollbar { display: none; }
+
+/* Printable report (components/account/ReportView.tsx). The report renders
+   via Portal into document.body alongside the rest of the app, so printing
+   needs to hide everything except .print-report specifically — this is the
+   standard "print only this subtree" technique: hide everything, then
+   re-reveal just the report and pull it out of normal flow to the top. */
+@media print {
+  body * { visibility: hidden; }
+  .print-report, .print-report * { visibility: visible; }
+  .print-report { position: absolute; top: 0; left: 0; width: 100%; }
+  .no-print { display: none !important; }
+  .print-page-break { break-before: page; }
+  .print-avoid-break { break-inside: avoid; }
+  @page { margin: 14mm; }
+  * { print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; }
+}

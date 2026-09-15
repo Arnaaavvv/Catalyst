@@ -1,12 +1,13 @@
 "use client";
 import { useMemo, useRef, useState } from "react";
-import { Loader2, X, Camera, Sparkles } from "lucide-react";
+import { Loader2, X, Camera, Sparkles, Download } from "lucide-react";
 import { updateProfile, uploadAvatar, AuthError, BIO_MAX_LENGTH, type PublicUser, type Sex } from "@/lib/auth";
 import { calculateAge, todayISO } from "@/lib/date";
 import { computePersonalityTraits, personalityToSlices, computePeakImprovementEra } from "@/lib/personality";
 import { inputCls, FieldLabel } from "@/components/shared/Primitives";
 import Portal from "@/components/shared/Portal";
 import PersonalityChart from "@/components/account/PersonalityChart";
+import ReportView from "@/components/account/ReportView";
 import type { LifeOSState } from "@/lib/types";
 
 export default function AccountPage({
@@ -18,6 +19,7 @@ export default function AccountPage({
   const [bio, setBio] = useState(user.bio ?? "");
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
@@ -67,9 +69,14 @@ export default function AccountPage({
         <div className="max-w-[720px] mx-auto px-5 py-8 fade-in">
           <div className="flex items-center justify-between mb-8">
             <h1 className="font-display text-2xl">Manage account</h1>
-            <button onClick={onClose} className="p-2 rounded-lg row-hover" aria-label="Close">
-              <X size={18} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setReportOpen(true)} className="text-xs px-3 py-2 rounded-lg hairline border flex items-center gap-1.5">
+                <Download size={13} /> Download profile/stats
+              </button>
+              <button onClick={onClose} className="p-2 rounded-lg row-hover" aria-label="Close">
+                <X size={18} />
+              </button>
+            </div>
           </div>
 
           <form onSubmit={submit}>
@@ -176,12 +183,12 @@ export default function AccountPage({
                   <div className="font-display text-lg mb-1">{peakEra.label}</div>
                   <p className="text-xs text-dim leading-relaxed">
                     Your habit consistency rose {peakEra.improvementPct} percentage points that week compared to
-                    the one before it, the sharpest turnaround in your tracked history.
+                    the one before it — the sharpest turnaround in your tracked history.
                   </p>
                 </>
               ) : (
                 <p className="text-xs text-dim leading-relaxed">
-                  Not enough habit history yet to identify a turning point, keep logging and check back in a
+                  Not enough habit history yet to identify a turning point — keep logging and check back in a
                   couple of weeks.
                 </p>
               )}
@@ -189,6 +196,8 @@ export default function AccountPage({
           </div>
         </div>
       </div>
+
+      {reportOpen && <ReportView user={user} state={state} onClose={() => setReportOpen(false)} />}
     </Portal>
   );
 }
