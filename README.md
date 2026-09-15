@@ -13,11 +13,11 @@
 
 Most productivity apps make you choose: a habit tracker, a task manager, a goal board, a grade log. Catalyst treats them as one graph instead of four silos — a habit feeds a goal, a goal is made of tasks, a task belongs to a subject, and your health metrics sit next to all of it because none of the rest works if you're not sleeping.
 
-It's built for one user (me), which is a feature, not a limitation — no multi-tenant compromises, no generic settings nobody needs, no feature flags for edge cases that will never happen.
+It's built for one user currently, which is a feature, not a limitation — no multi-tenant compromises, no generic settings nobody needs, no feature flags for edge cases that will never happen.
 
 ## 🔴 Live Demo
 
-**[Try it here](https://catalyst-yourname.vercel.app)**
+**[Try it here](https://catalyst-track.vercel.app/)**
 
 Sign up, and your Today view, Goals map, and Academics module are ready to go — no seed data required to see it work.
 
@@ -44,7 +44,7 @@ Sign up, and your Today view, Goals map, and Academics module are ready to go �
 ## 🚀 Getting Started
 
 ```bash
-git clone https://github.com/yourusername/catalyst.git
+git clone https://github.com/Arnaaavvv/catalyst.git
 cd catalyst
 npm install
 ```
@@ -85,7 +85,7 @@ catalyst/
 
 ## ☁️ Deployment
 
-Live in production on Vercel, with Supabase handling Postgres, Auth, and Row Level Security. Set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `GEMINI_API_KEY` as environment variables in the Vercel project settings.
+Live in production on Vercel, with Supabase handling Postgres, Auth, and Row Level Security. 
 
 ---
 *One system. Every part of your day, actually connected.*
