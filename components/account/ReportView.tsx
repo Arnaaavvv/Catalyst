@@ -78,7 +78,13 @@ export default function ReportView({
 
   return (
     <Portal>
-      <div className="fixed inset-0 z-50 overflow-y-auto scrollbar-thin" style={{ background: "var(--bg)" }}>
+      {/* PRINT_VARS applied at the outermost level, not just the inner
+          content column — this forces the entire report experience
+          (backdrop, toolbar, content) to light mode regardless of the
+          app's current theme, so the on-screen preview matches the
+          printed/PDF output exactly instead of showing a dark backdrop
+          around a light content rectangle. */}
+      <div className="fixed inset-0 z-50 overflow-y-auto scrollbar-thin" style={{ ...PRINT_VARS, background: "var(--bg)" }}>
         <div className="no-print sticky top-0 z-10 flex items-center justify-between px-5 py-3" style={{ background: "var(--surface)", borderBottom: "1px solid var(--line)" }}>
           <span className="text-sm font-medium">Report preview</span>
           <div className="flex items-center gap-2">
@@ -89,7 +95,7 @@ export default function ReportView({
           </div>
         </div>
 
-        <div className="print-report max-w-[760px] mx-auto px-6 py-8" style={PRINT_VARS}>
+        <div className="print-report max-w-[760px] mx-auto px-6 py-8">
           {/* Header */}
           <div className="flex items-center gap-4 mb-2 print-avoid-break">
             {user.avatarUrl ? (
