@@ -40,8 +40,8 @@ export default function HealthView({ state, actions }: { state: LifeOSState; act
         <EmptyState icon={Activity} title="No health data yet"
           hint="Log today's sleep, steps, or exercise to start seeing trends here." />
       ) : (
-        <div className="grid gap-5" style={{ gridTemplateColumns: "2fr 1fr" }}>
-          <div className="surface rounded-xl p-4">
+        <div className="grid gap-5 grid-cols-1 md:grid-cols-[2fr_1fr]">
+          <div className="surface rounded-xl p-4 min-w-0">
             <div className="flex gap-1.5 mb-4 flex-wrap">
               {HEALTH_METRICS.map((m) => (
                 <button key={m.key} onClick={() => setMetric(m.key)} className="chip"
@@ -61,7 +61,7 @@ export default function HealthView({ state, actions }: { state: LifeOSState; act
             </div>
           </div>
 
-          <div className="space-y-5">
+          <div className="space-y-5 min-w-0">
             <div className="surface rounded-xl p-4 flex items-center gap-4">
               <MomentumDial state={mom.state} color="var(--health)" size={64} />
               <div>

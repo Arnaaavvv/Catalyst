@@ -85,17 +85,17 @@ export default function ReportView({
           printed/PDF output exactly instead of showing a dark backdrop
           around a light content rectangle. */}
       <div className="fixed inset-0 z-50 overflow-y-auto scrollbar-thin" style={{ ...PRINT_VARS, background: "var(--bg)" }}>
-        <div className="no-print sticky top-0 z-10 flex items-center justify-between px-5 py-3" style={{ background: "var(--surface)", borderBottom: "1px solid var(--line)" }}>
+        <div className="no-print sticky top-0 z-10 flex items-center justify-between px-4 sm:px-5 py-3" style={{ background: "var(--surface)", borderBottom: "1px solid var(--line)" }}>
           <span className="text-sm font-medium">Report preview</span>
           <div className="flex items-center gap-2">
             <button onClick={() => window.print()} className="btn-primary text-xs px-3 py-2 rounded-lg flex items-center gap-1.5">
-              <Printer size={13} /> Print / Save as PDF
+              <Printer size={13} /> <span className="hidden sm:inline">Print / Save as PDF</span><span className="sm:hidden">Print / PDF</span>
             </button>
             <button onClick={onClose} className="p-2 rounded-lg row-hover" aria-label="Close"><X size={16} /></button>
           </div>
         </div>
 
-        <div className="print-report max-w-[760px] mx-auto px-6 py-8">
+        <div className="print-report max-w-[760px] mx-auto px-4 sm:px-6 print:px-6 py-8">
           {/* Header */}
           <div className="flex items-center gap-4 mb-2 print-avoid-break">
             {user.avatarUrl ? (
@@ -106,7 +106,7 @@ export default function ReportView({
                 <span className="font-display text-2xl text-faint">{(user.username || user.name || "?").charAt(0).toUpperCase()}</span>
               </div>
             )}
-            <div>
+            <div className="min-w-0 break-words">
               <h1 className="font-display text-2xl leading-tight">{user.username || user.name}</h1>
               <div className="text-xs text-faint">{user.name}{user.username ? ` · @${user.username}` : ""} · {user.email}</div>
             </div>
@@ -119,7 +119,7 @@ export default function ReportView({
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-4 mb-2 print-avoid-break">
+          <div className="grid grid-cols-1 sm:grid-cols-3 print:grid-cols-3 gap-4 mb-2 print-avoid-break">
             <StatRow label="Date of birth" value={user.dob ? `${fmtShort(user.dob)}${age !== null ? ` (age ${age})` : ""}` : "—"} />
             <StatRow label="Sex" value={user.sex ? user.sex.charAt(0).toUpperCase() + user.sex.slice(1) : "—"} />
             <StatRow label="Tracking since" value={state.goals[0]?.createdAt ? fmtShort(state.goals[0].createdAt) : "—"} />
@@ -151,7 +151,7 @@ export default function ReportView({
             <div className="print-avoid-break mb-4">
               <LifePulse state={state} />
             </div>
-            <div className="grid grid-cols-5 gap-2 print-avoid-break">
+            <div className="grid grid-cols-3 sm:grid-cols-5 print:grid-cols-5 gap-x-2 gap-y-3 print-avoid-break">
               {doms.map((d) => {
                 const m = domainMomentum(d, state);
                 return (
@@ -171,7 +171,7 @@ export default function ReportView({
             {state.healthLogs.length === 0 ? (
               <p className="text-xs text-dim">No health data logged yet.</p>
             ) : (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2 gap-4">
                 {HEALTH_METRICS.map((m) => {
                   const logs = state.healthLogs.slice(-30);
                   const values = logs.map((l) => Number(l[m.key]));

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { X, Target } from "lucide-react";
 import { domainMomentum, goalProgress, habitRate } from "@/lib/derived";
 import { fmtShort, isoOf } from "@/lib/date";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import MomentumDial from "@/components/shared/MomentumDial";
 import { SectionHeader, TaskCheck, EmptyState, inputCls, FieldLabel } from "@/components/shared/Primitives";
 import Portal from "@/components/shared/Portal";
@@ -21,11 +22,19 @@ interface Satellite {
   goalY: number;
 }
 
+const trunc = (s: string, max: number) => (s.length > max ? s.slice(0, max - 2) + "…" : s);
+
 function ConstellationMap({
-  state, onSelect, selectedId,
-}: { state: LifeOSState; onSelect: (id: string) => void; selectedId: string | null }) {
-  const w = 700;
-  const rowH = 20; // vertical space reserved per satellite item
+  state, onSelect, selectedId, compact,
+}: { state: LifeOSState; onSelect: (id: string) => void; selectedId: string | null; compact: boolean }) {
+  // The SVG scales to its card's width. At 700 units wide a phone would shrink
+  // the 10px labels to ~4px, so phones get a narrower canvas, a bigger label
+  // size, and shorter truncation instead of the same drawing made smaller.
+  const w = compact ? 360 : 700;
+  const goalX = w * (compact ? 0.3 : 0.28);
+  const satX = w * (compact ? 0.66 : 0.72);
+  const labelSize = compact ? 11 : 10;
+  const rowH = compact ? 22 : 20; // vertical space reserved per satellite item
   const minBand = 84; // minimum height per goal, even with 0-1 items
   const goals = state.goals;
 
@@ -57,7 +66,7 @@ function ConstellationMap({
     const n = items.length;
     items.forEach((item, i) => {
       const sy = n <= 1 ? y : top + 16 + i * ((height - 32) / Math.max(1, n - 1));
-      satellites.push({ ...item, goalId: goal.id, x: w * 0.72, y: sy, goalX: w * 0.28, goalY: y });
+      satellites.push({ ...item, goalId: goal.id, x: satX, y: sy, goalX, goalY: y });
     });
   });
 
@@ -75,8 +84,8 @@ function ConstellationMap({
       {satellites.map((s) => (
         <g key={s.id} opacity={dimmed(s.goalId) ? 0.3 : 1} style={{ transition: "opacity 0.15s ease" }}>
           <circle cx={s.x} cy={s.y} r="4" fill={s.type === "habit" ? "var(--habits)" : "var(--tasks)"} opacity="0.85" />
-          <text x={s.x + 9} y={s.y + 3} fontSize="10" fill="var(--ink-dim)" fontFamily="Public Sans">
-            {s.name.length > 26 ? s.name.slice(0, 24) + "…" : s.name}
+          <text x={s.x + 9} y={s.y + 3} fontSize={labelSize} fill="var(--ink-dim)" fontFamily="Public Sans">
+            {trunc(s.name, compact ? 18 : 26)}
           </text>
         </g>
       ))}
@@ -86,12 +95,13 @@ function ConstellationMap({
         const selected = selectedId === goal.id;
         return (
           <g key={goal.id} onClick={() => onSelect(goal.id)} style={{ cursor: "pointer" }}>
-            <circle cx={w * 0.28} cy={y} r={r + 6} fill="none" stroke="var(--goals)" strokeWidth={selected ? 1.5 : 0.75} opacity={selected ? 0.6 : 0.25} />
-            <circle cx={w * 0.28} cy={y} r={r} fill="var(--goals)" opacity={0.85} />
-            <text x={w * 0.28} y={y - r - 10} fontSize="12" fontWeight="600" fill="var(--ink)" textAnchor="middle" fontFamily="Fraunces">
-              {goal.title.length > 34 ? goal.title.slice(0, 32) + "…" : goal.title}
+            <circle cx={goalX} cy={y} r={r + 14} fill="transparent" />
+            <circle cx={goalX} cy={y} r={r + 6} fill="none" stroke="var(--goals)" strokeWidth={selected ? 1.5 : 0.75} opacity={selected ? 0.6 : 0.25} />
+            <circle cx={goalX} cy={y} r={r} fill="var(--goals)" opacity={0.85} />
+            <text x={goalX} y={y - r - 10} fontSize="12" fontWeight="600" fill="var(--ink)" textAnchor="middle" fontFamily="Fraunces">
+              {trunc(goal.title, compact ? 22 : 34)}
             </text>
-            <text x={w * 0.28} y={y + 3} fontSize="9" fill="var(--accent-ink)" textAnchor="middle" fontFamily="IBM Plex Mono">
+            <text x={goalX} y={y + 3} fontSize={compact ? 10 : 9} fill="var(--accent-ink)" textAnchor="middle" fontFamily="IBM Plex Mono">
               {Math.round(prog * 100)}%
             </text>
           </g>
@@ -104,6 +114,7 @@ function ConstellationMap({
 export default function GoalsView({ state, actions }: { state: LifeOSState; actions: LifeOSActions }) {
   const [selected, setSelected] = useState<string | null>(state.goals[0]?.id || null);
   const [newGoalOpen, setNewGoalOpen] = useState(false);
+  const compact = useMediaQuery("(max-width: 767px)");
   const goal = state.goals.find((g) => g.id === selected);
   const mom = domainMomentum("goals", state);
   const hasGoals = state.goals.length > 0;
@@ -125,7 +136,7 @@ export default function GoalsView({ state, actions }: { state: LifeOSState; acti
       ) : (
         <>
           <div className="surface rounded-xl p-4 mb-5">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 mb-2">
               <div className="font-mono text-[10px] text-faint tracking-wide">RELATIONSHIP MAP · click a goal</div>
               <div className="flex items-center gap-3 text-[10px] font-mono text-faint">
                 <span className="flex items-center gap-1"><span className="dot" style={{ background: "var(--goals)" }} /> goal</span>
@@ -133,12 +144,12 @@ export default function GoalsView({ state, actions }: { state: LifeOSState; acti
                 <span className="flex items-center gap-1"><span className="dot" style={{ background: "var(--tasks)" }} /> task</span>
               </div>
             </div>
-            <ConstellationMap state={state} onSelect={setSelected} selectedId={selected} />
+            <ConstellationMap state={state} onSelect={setSelected} selectedId={selected} compact={compact} />
           </div>
 
           {goal && (
-            <div className="grid gap-5" style={{ gridTemplateColumns: "1fr 1fr" }}>
-              <div className="surface rounded-xl p-4">
+            <div className="grid gap-5 grid-cols-1 md:grid-cols-2">
+              <div className="surface rounded-xl p-4 min-w-0">
                 <div className="flex items-start justify-between mb-1">
                   <h3 className="font-display text-xl" style={{ maxWidth: 280 }}>{goal.title}</h3>
                   <MomentumDial state={mom.state} color="var(--goals)" size={48} />
@@ -148,13 +159,13 @@ export default function GoalsView({ state, actions }: { state: LifeOSState; acti
                   {goal.milestones.map((m) => (
                     <div key={m.id} className="row-hover flex items-center gap-2.5 px-2 py-2 rounded-lg">
                       <TaskCheck done={m.done} onClick={() => actions.toggleMilestone(goal.id, m.id)} />
-                      <span className={`text-sm flex-1 ${m.done ? "line-through text-faint" : ""}`}>{m.title}</span>
+                      <span className={`text-sm flex-1 min-w-0 ${m.done ? "line-through text-faint" : ""}`}>{m.title}</span>
                       <span className="font-mono text-[10px] text-faint">{fmtShort(m.date)}</span>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="surface rounded-xl p-4">
+              <div className="surface rounded-xl p-4 min-w-0">
                 <div className="font-mono text-[10px] text-faint tracking-wide mb-3">LINKED HABITS</div>
                 <div className="space-y-2 mb-4">
                   {state.habits.filter((h) => h.linkedGoalId === goal.id).map((h) => (

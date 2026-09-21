@@ -40,7 +40,7 @@ export default function PersonalityChart({ slices }: { slices: PersonalitySlice[
 
   return (
     <div className="flex items-center gap-6 flex-wrap">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="flex-shrink-0">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="flex-shrink-0 mx-auto sm:mx-0">
         {segments.map((s) => (
           <path key={s.key} d={donutSlicePath(cx, cy, rOuter, rInner, s.start, s.end)} fill={s.color} opacity="0.9" />
         ))}

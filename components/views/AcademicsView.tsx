@@ -51,8 +51,8 @@ export default function AcademicsView({ state, actions }: { state: LifeOSState; 
           hint={'Add your first subject with "New subject" above to start tracking assignments and study sessions.'} />
       ) : (
         <>
-          <div className="grid gap-5 mb-5" style={{ gridTemplateColumns: "1fr 1fr" }}>
-            <div className="surface rounded-xl p-4">
+          <div className="grid gap-5 mb-5 grid-cols-1 md:grid-cols-2">
+            <div className="surface rounded-xl p-4 min-w-0">
               <div className="font-mono text-[10px] text-faint tracking-wide mb-3">FOCUSED STUDY MODE</div>
               <div className="flex items-center gap-4">
                 <div className="font-mono text-4xl tabular-nums" style={{ color: "var(--academics)" }}>{mm}:{ss}</div>
@@ -74,14 +74,14 @@ export default function AcademicsView({ state, actions }: { state: LifeOSState; 
               </div>
             </div>
 
-            <div className="surface rounded-xl p-4">
+            <div className="surface rounded-xl p-4 min-w-0">
               <div className="font-mono text-[10px] text-faint tracking-wide mb-3">STUDY LOAD · LAST 7 DAYS</div>
               <div className="space-y-2">
                 {state.subjects.map((s) => {
                   const mins = state.studySessions.filter((ss2) => ss2.subjectId === s.id && daysBetween(ss2.date, todayISO()) <= 7).reduce((a, b) => a + b.duration, 0);
                   return (
                     <div key={s.id} className="flex items-center gap-2">
-                      <span className="text-xs w-36 truncate">{s.name}</span>
+                      <span className="text-xs w-28 md:w-36 truncate">{s.name}</span>
                       <div className="flex-1 h-1.5 rounded-full surface-2 overflow-hidden">
                         <div className="h-full rounded-full" style={{ width: `${Math.min(100, mins / 2)}%`, background: "var(--academics)" }} />
                       </div>
@@ -93,8 +93,8 @@ export default function AcademicsView({ state, actions }: { state: LifeOSState; 
             </div>
           </div>
 
-          <div className="grid gap-5" style={{ gridTemplateColumns: "1.3fr 1fr" }}>
-            <div className="surface rounded-xl p-4">
+          <div className="grid gap-5 grid-cols-1 md:grid-cols-[1.3fr_1fr]">
+            <div className="surface rounded-xl p-4 min-w-0">
               <div className="font-mono text-[10px] text-faint tracking-wide mb-3">ASSIGNMENTS & EXAMS</div>
               {state.assignments.length === 0 ? (
                 <div className="text-xs text-dim py-4">No assignments tracked yet. Add one with Ctrl + K.</div>
@@ -118,7 +118,7 @@ export default function AcademicsView({ state, actions }: { state: LifeOSState; 
               )}
             </div>
 
-            <div className="surface rounded-xl p-4">
+            <div className="surface rounded-xl p-4 min-w-0">
               <div className="font-mono text-[10px] text-faint tracking-wide mb-3">RECENT SESSIONS</div>
               {state.studySessions.length === 0 ? (
                 <div className="text-xs text-dim py-4">No study sessions logged yet.</div>

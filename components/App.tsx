@@ -118,6 +118,12 @@ function AuthedApp({
   const { state, status, loadError, saveError, actions, retry } = useLifeOSStore(user.id);
   const ViewComponent = VIEWS[view];
 
+  // The bottom tab bar swaps whole pages while the window keeps its scroll
+  // offset, so a new view would open halfway down. Desktop is left as it was.
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 767px)").matches) window.scrollTo(0, 0);
+  }, [view]);
+
   if (status === "loading" || !state) {
     return <div className="min-h-screen flex items-center justify-center"><Loading label="Loading your data" /></div>;
   }
@@ -140,22 +146,24 @@ function AuthedApp({
       <div className="flex">
         <NavRail view={view} setView={setView} dark={dark} setDark={setDark} user={user} state={state} onLogOut={onLogOut} onClearData={actions.clearAllData} onUserUpdate={onUserUpdate} />
         <div className="flex-1 min-w-0">
-          <MobileNav view={view} setView={setView} />
           <TopBar onQuickAdd={() => setPaletteOpen(true)} />
-          <div className="px-4 md:px-8 py-5 md:py-6 max-w-[1080px]">
+          <div className="px-4 md:px-8 pt-5 md:pt-6 app-content max-w-[1080px]">
             <ViewComponent state={state} actions={actions} />
           </div>
         </div>
       </div>
 
-      <button onClick={() => setPaletteOpen(true)}
-        className="md:hidden fixed bottom-5 right-5 rounded-full btn-primary flex items-center justify-center z-40"
+      <MobileNav view={view} setView={setView} dark={dark} setDark={setDark} user={user} state={state}
+        onLogOut={onLogOut} onClearData={actions.clearAllData} onUserUpdate={onUserUpdate} />
+
+      <button onClick={() => setPaletteOpen(true)} aria-label="Quick add"
+        className="md:hidden fixed mobile-fab right-5 rounded-full btn-primary flex items-center justify-center z-40"
         style={{ width: 52, height: 52, boxShadow: "0 8px 24px rgba(0,0,0,0.25)" }}>
         <Plus size={22} />
       </button>
 
       {saveError && (
-        <div className="fixed bottom-4 left-4 chip z-40" style={{ color: "var(--tasks)", background: "var(--surface)" }}>
+        <div className="fixed mobile-toast left-4 chip z-40" style={{ color: "var(--tasks)", background: "var(--surface)" }}>
           <AlertCircle size={11} /> Changes aren&apos;t saving right now
         </div>
       )}

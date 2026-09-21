@@ -13,7 +13,7 @@ import type { LifeOSActions } from "@/hooks/useLifeOSStore";
 function HabitHistoryRow({ habit }: { habit: Habit }) {
   const days = habit.history.slice(-28);
   return (
-    <div className="flex gap-[3px]">
+    <div className="flex gap-[3px] min-w-0">
       {days.map((d, i) => (
         <div key={i} title={d.date} className="rounded-[2px]"
           style={{ width: 7, height: 18, background: d.done ? DOMAINS.habits.color : "var(--line)", opacity: d.done ? 0.9 : 0.5 }} />
@@ -54,9 +54,9 @@ export default function HabitsView({ state, actions }: { state: LifeOSState; act
               const doneToday = h.history.find((x) => x.date === todayISO())?.done;
               return (
                 <div key={h.id} className="surface rounded-xl p-4">
-                  <div className="flex items-center gap-3 mb-3">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-3">
                     <TaskCheck done={!!doneToday} onClick={() => actions.logHabit(h.id, todayISO())} />
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-[6.5rem] flex-1">
                       <div className="text-sm font-medium">{h.name}</div>
                       <div className="font-mono text-[10px] text-faint mt-0.5">
                         target {h.target} {h.unit} {linkedGoal && <>· <Link2 size={9} className="inline mb-0.5" /> {linkedGoal.title}</>}
@@ -67,9 +67,9 @@ export default function HabitsView({ state, actions }: { state: LifeOSState; act
                     </div>
                     <span className="chip" style={{ color: hm.state === "stalled" ? "var(--tasks)" : "var(--ink-dim)" }}>{MOMENTUM_META[hm.state].label}</span>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-3">
                     <HabitHistoryRow habit={h} />
-                    <span className="font-mono text-[11px] text-faint">{Math.round(rate * 100)}% · 14d</span>
+                    <span className="font-mono text-[11px] text-faint whitespace-nowrap flex-shrink-0">{Math.round(rate * 100)}% · 14d</span>
                   </div>
                 </div>
               );

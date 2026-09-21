@@ -20,6 +20,7 @@
   --goals: #46536B;
   --tasks: #A63D2F;
   --academics: #386B4E;
+  --tabbar-h: 56px;
   color-scheme: light;
 }
 
@@ -51,6 +52,9 @@ html, body {
   transition: background 0.25s ease, color 0.25s ease;
 }
 
+/* Stops iOS from inflating text when a phone rotates to landscape. */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
 ::selection { background: var(--accent); color: var(--accent-ink); }
 
 .font-display { font-family: 'Fraunces', serif; font-optical-sizing: auto; }
@@ -72,7 +76,7 @@ html, body {
   background: var(--accent); color: var(--accent-ink); font-weight: 600;
   transition: transform 0.12s ease, opacity 0.15s ease;
 }
-.btn-primary:hover { opacity: 0.9; }
+@media (hover: hover) { .btn-primary:hover { opacity: 0.9; } }
 .btn-primary:active { transform: scale(0.97); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -85,14 +89,16 @@ html, body {
 .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
 
 .row-hover { transition: background 0.15s ease; }
-.row-hover:hover { background: var(--surface-2); }
+/* Hover is gated to devices that can hover; on touch it would stay "stuck" after a tap. :active gives touch its feedback. */
+@media (hover: hover) { .row-hover:hover { background: var(--surface-2); } }
+.row-hover:active { background: var(--surface-2); }
 
 .task-check {
   width: 19px; height: 19px; border-radius: 6px; border: 1.5px solid var(--line-strong);
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   transition: all 0.15s ease; cursor: pointer; background: var(--surface);
 }
-.task-check:hover { border-color: var(--accent); }
+@media (hover: hover) { .task-check:hover { border-color: var(--accent); } }
 .task-check.done { background: var(--accent); border-color: var(--accent); }
 
 .kbd {
@@ -109,7 +115,13 @@ html, body {
 
 .modal-backdrop { animation: backdropIn 0.2s ease; }
 @keyframes backdropIn { from { opacity: 0; } to { opacity: 1; } }
-.modal-panel { animation: panelIn 0.22s cubic-bezier(.2,.8,.2,1); }
+.modal-panel {
+  animation: panelIn 0.22s cubic-bezier(.2,.8,.2,1);
+  /* Never taller than the screen; scrolls inside on short phones or in landscape. */
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+}
 @keyframes panelIn { from { opacity: 0; transform: translateY(-8px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
 .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -123,7 +135,38 @@ input, textarea, select {
 input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); }
 input::placeholder, textarea::placeholder { color: var(--ink-faint); }
 
-.nav-scroll::-webkit-scrollbar { display: none; }
+.sheet-panel { animation: sheetIn 0.25s cubic-bezier(.2,.8,.2,1); }
+@keyframes sheetIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+/* ---- Mobile ----------------------------------------------------------
+   The bottom tab bar (MobileNav) is fixed, so everything else that floats
+   or scrolls at the bottom of the screen has to clear it. Desktop has no
+   tab bar, so those offsets fall back to their original values at md+. */
+.app-content { padding-bottom: calc(var(--tabbar-h) + 84px + env(safe-area-inset-bottom, 0px)); }
+.mobile-fab { bottom: calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom, 0px)); }
+.mobile-toast { bottom: calc(var(--tabbar-h) + 12px + env(safe-area-inset-bottom, 0px)); }
+@media (min-width: 768px) {
+  .app-content { padding-bottom: 1.5rem; }
+  .mobile-toast { bottom: 1rem; }
+}
+
+@media (max-width: 767px) {
+  /* iOS Safari zooms the page when an input under 16px gets focus. !important
+     because the inputs carry Tailwind text-sm, which would otherwise win. */
+  input, textarea, select { font-size: 16px !important; }
+
+  /* iOS renders date inputs with their own intrinsic width and no minimum
+     height, so they overflow grid columns and collapse when empty. */
+  input[type="date"] { min-width: 0; min-height: 38px; -webkit-appearance: none; appearance: none; text-align: left; }
+  input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+}
+
+/* Fingers are less precise than cursors: grow the checkbox's tap area
+   without changing how big it looks or how anything is laid out. */
+@media (pointer: coarse) {
+  .task-check { position: relative; }
+  .task-check::after { content: ''; position: absolute; inset: -8px; }
+}
 
 /* Printable report (components/account/ReportView.tsx). The report renders
    via Portal into document.body alongside the rest of the app, so printing

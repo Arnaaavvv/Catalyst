@@ -29,7 +29,7 @@ export default function LifePulse({ state, compact = false }: { state: LifeOSSta
   const dayW = w / days;
 
   return (
-    <div className="w-full overflow-x-auto scrollbar-thin">
+    <div className="w-full overflow-x-auto scrollbar-thin max-md:relative">
       <svg width="100%" height={lanes.length * (laneH + gap)} viewBox={`0 0 ${w} ${lanes.length * (laneH + gap)}`} preserveAspectRatio="none">
         {lanes.map((domainId, li) => {
           const color = DOMAINS[domainId].color;
@@ -51,7 +51,7 @@ export default function LifePulse({ state, compact = false }: { state: LifeOSSta
             <g key={domainId}>
               <path d={path} fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
               {!compact && (
-                <text x="2" y={y0 + 9} className="font-mono" fontSize="8" fill="var(--ink-faint)" letterSpacing="0.5">
+                <text x="2" y={y0 + 9} className="font-mono max-md:hidden" fontSize="8" fill="var(--ink-faint)" letterSpacing="0.5">
                   {DOMAINS[domainId].label.toUpperCase()}
                 </text>
               )}
@@ -59,6 +59,19 @@ export default function LifePulse({ state, compact = false }: { state: LifeOSSta
           );
         })}
       </svg>
+      {/* The SVG stretches to fit (preserveAspectRatio="none"), which on a
+          phone squashes its own text into slivers. Below md the lane labels
+          are plain HTML laid over the strip, so they keep their proportions. */}
+      {!compact && (
+        <div className="md:hidden pointer-events-none absolute inset-0" aria-hidden>
+          {lanes.map((domainId, li) => (
+            <span key={domainId} className="absolute left-0.5 font-mono text-[8px] leading-none tracking-[0.5px] text-faint"
+              style={{ top: li * (laneH + gap) + 1 }}>
+              {DOMAINS[domainId].label.toUpperCase()}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

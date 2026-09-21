@@ -39,7 +39,7 @@ export default function TodayView({ state, actions }: { state: LifeOSState; acti
     <div className="fade-in">
       <div className="mb-7">
         <div className="font-mono text-[11px] text-faint tracking-wide mb-1">{fmtDay(today).toUpperCase()}</div>
-        <h1 className="font-display text-[30px] leading-tight mb-2" style={{ fontWeight: 500, maxWidth: 640 }}>{statLine}</h1>
+        <h1 className="font-display text-[26px] md:text-[30px] leading-tight mb-2" style={{ fontWeight: 500, maxWidth: 640 }}>{statLine}</h1>
       </div>
 
       {isBlank ? (
@@ -58,9 +58,9 @@ export default function TodayView({ state, actions }: { state: LifeOSState; acti
       ) : (
         <>
           {state.isExample && (
-            <div className="surface rounded-xl p-3.5 mb-5 flex items-center gap-3" style={{ borderColor: "var(--accent)" }}>
+            <div className="surface rounded-xl p-3.5 mb-5 flex flex-wrap items-center gap-3" style={{ borderColor: "var(--accent)" }}>
               <Info size={15} style={{ color: "var(--accent)" }} className="flex-shrink-0" />
-              <p className="text-xs text-dim flex-1">
+              <p className="text-xs text-dim flex-1 min-w-[12rem]">
                 You&apos;re viewing the <strong className="text-ink font-medium">example template</strong>,
                 sample data to explore the app. Clear it whenever you&apos;re ready to track your own.
               </p>
@@ -76,8 +76,8 @@ export default function TodayView({ state, actions }: { state: LifeOSState; acti
             <LifePulse state={state} />
           </div>
 
-          <div className="grid gap-5" style={{ gridTemplateColumns: "1.5fr 1fr" }}>
-            <div className="surface rounded-xl p-4">
+          <div className="grid gap-5 grid-cols-1 md:grid-cols-[1.5fr_1fr]">
+            <div className="surface rounded-xl p-4 min-w-0">
               <div className="flex items-center justify-between mb-3">
                 <div className="font-mono text-[10px] text-faint tracking-wide">TODAY&apos;S FOCUS</div>
                 <span className="text-xs text-dim">{doneToday} done{overdue ? ` · ${overdue} overdue` : ""}</span>
@@ -89,7 +89,7 @@ export default function TodayView({ state, actions }: { state: LifeOSState; acti
                   {todaysTasks.map((t) => (
                     <div key={t.id} className="row-hover flex items-center gap-2.5 px-2 py-2 rounded-lg">
                       <TaskCheck done={t.done} onClick={() => actions.toggleTask(t.id)} />
-                      <span className={`text-sm flex-1 ${t.done ? "line-through text-faint" : ""}`}>{t.title}</span>
+                      <span className={`text-sm flex-1 min-w-0 ${t.done ? "line-through text-faint" : ""}`}>{t.title}</span>
                       {t.due && t.due < today && !t.done && <span className="chip" style={{ color: "var(--tasks)", borderColor: "var(--tasks)" }}>overdue</span>}
                       <span className="chip text-faint">{t.project}</span>
                     </div>
@@ -100,7 +100,7 @@ export default function TodayView({ state, actions }: { state: LifeOSState; acti
               {state.habits.length > 0 && (
                 <>
                   <div className="font-mono text-[10px] text-faint tracking-wide mt-5 mb-2">HABITS TODAY</div>
-                  <div className="grid grid-cols-2 gap-1.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                     {state.habits.map((h) => {
                       const done = h.history.find((x) => x.date === today)?.done;
                       const streak = habitStreak(h);
@@ -129,7 +129,7 @@ export default function TodayView({ state, actions }: { state: LifeOSState; acti
               )}
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-5 min-w-0">
               <div className="surface rounded-xl p-4">
                 <div className="font-mono text-[10px] text-faint tracking-wide mb-3">HEALTH SNAPSHOT</div>
                 {todaysLog ? (

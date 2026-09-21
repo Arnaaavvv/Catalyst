@@ -79,9 +79,9 @@ export default function CommandPalette({
 
   return (
     <Portal>
-      <div className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] px-4 modal-backdrop"
+      <div className="fixed inset-0 z-50 flex items-start justify-center pt-[8vh] md:pt-[12vh] px-4 modal-backdrop"
         style={{ background: "rgba(20,18,12,0.5)" }} onMouseDown={onClose}>
-        <div className="modal-panel w-full max-w-[560px] surface rounded-2xl overflow-hidden" style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}
+        <div className="modal-panel w-full max-w-[560px] surface rounded-2xl overflow-hidden" style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)", maxHeight: "calc(100dvh - 14vh)" }}
           onMouseDown={(e) => e.stopPropagation()}>
 
           {mode === "menu" && (

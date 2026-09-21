@@ -20,7 +20,7 @@ export default function InsightsView({ state }: { state: LifeOSState }) {
     <div className="fade-in">
       <SectionHeader eyebrow="PATTERNS IN YOUR OWN DATA" title="Insights" />
 
-      <div className="grid grid-cols-5 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
         {momentums.map((m) => {
           const Icon = DOMAINS[m.id].icon;
           return (

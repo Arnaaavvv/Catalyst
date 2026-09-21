@@ -61,15 +61,18 @@ export default function TasksView({ state, actions }: { state: LifeOSState; acti
             const isOpen = expanded[t.id];
             return (
               <div key={t.id} className="surface rounded-xl mb-2 overflow-hidden">
-                <div className="row-hover flex items-center gap-2.5 px-3 py-3">
+                <div className="row-hover flex flex-wrap md:flex-nowrap items-center gap-x-2.5 gap-y-1.5 px-3 py-3">
                   <TaskCheck done={t.done} onClick={() => actions.toggleTask(t.id)} />
                   <div className="flex-1 min-w-0">
                     <div className={`text-sm ${t.done ? "line-through text-faint" : ""}`}>{t.title}</div>
                   </div>
-                  <span className="dot" style={{ background: PRIORITY_COLOR[t.priority] }} title={t.priority} />
-                  {t.due && <span className="font-mono text-[10px] text-faint w-14 text-right">{fmtShort(t.due)}</span>}
-                  <span className="chip text-faint">{t.project}</span>
-                  {t.recurring && <Repeat size={11} className="text-faint" />}
+                  {/* On a phone the metadata drops to its own line under the title (29px = checkbox + gap); from md up it sits inline as before. */}
+                  <div className="order-last basis-full pl-[29px] md:order-none md:basis-auto md:pl-0 flex items-center gap-2.5">
+                    <span className="dot" style={{ background: PRIORITY_COLOR[t.priority] }} title={t.priority} />
+                    {t.due && <span className="font-mono text-[10px] text-faint md:w-14 md:text-right">{fmtShort(t.due)}</span>}
+                    <span className="chip text-faint">{t.project}</span>
+                    {t.recurring && <Repeat size={11} className="text-faint" />}
+                  </div>
                   {t.subtasks.length > 0 && (
                     <button onClick={() => setExpanded((s) => ({ ...s, [t.id]: !isOpen }))} className="text-faint">
                       <ChevronDown size={13} style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform .15s" }} />
