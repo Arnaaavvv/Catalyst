@@ -5,6 +5,12 @@ export const todayISO = (): string => new Date().toISOString().slice(0, 10);
 export const isoOf = (offsetDays: number): string =>
   new Date(Date.now() + offsetDays * DAY).toISOString().slice(0, 10);
 
+// Like isoOf, but offsets from a given ISO date instead of from "now" — for
+// walking calendar days relative to an arbitrary anchor (e.g. habit streaks
+// counting backward from today, or a prior window anchored to a past date).
+export const addDays = (iso: string, offsetDays: number): string =>
+  new Date(Date.parse(iso) + offsetDays * DAY).toISOString().slice(0, 10);
+
 export const fmtDay = (iso: string): string =>
   new Date(iso + "T00:00:00").toLocaleDateString(undefined, {
     weekday: "short",

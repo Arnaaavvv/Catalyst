@@ -1,5 +1,6 @@
 import type { LifeOSState } from "./types";
 import { fmtShort } from "./date";
+import { habitRate } from "./derived";
 
 // Every score below is a 0–1 raw signal computed from data that already
 // exists elsewhere in the app — nothing here is self-reported or arbitrary.
@@ -21,18 +22,15 @@ export const TRAIT_META: Record<keyof PersonalityTraits, { label: string; color:
   balanced: { label: "Balanced", color: "var(--health)", blurb: "How consistently you're paying attention to your health alongside everything else." },
 };
 
-function habitRateFor(history: { date: string; done: boolean }[], windowDays: number): number {
-  const recent = history.slice(-windowDays);
-  if (!recent.length) return 0;
-  return recent.filter((h) => h.done).length / recent.length;
-}
-
 export function computePersonalityTraits(state: LifeOSState): PersonalityTraits {
   // Disciplined: average habit-completion consistency (30-day window),
   // blended with overall task completion rate. Pure follow-through signal —
   // says nothing about how ambitious or wide-ranging the tracking is.
+  // habitRate (lib/derived.ts) walks actual calendar days rather than
+  // slicing the history array — history only holds days that were toggled,
+  // so a naive slice-by-entry-count wildly overstates sparse habits.
   const avgHabitRate = state.habits.length
-    ? state.habits.reduce((sum, h) => sum + habitRateFor(h.history, 30), 0) / state.habits.length
+    ? state.habits.reduce((sum, h) => sum + habitRate(h, 30), 0) / state.habits.length
     : 0;
   const taskCompletionRate = state.tasks.length
     ? state.tasks.filter((t) => t.done).length / state.tasks.length

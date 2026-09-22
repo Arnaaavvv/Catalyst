@@ -1,20 +1,35 @@
-import { daysBetween, isoOf, todayISO } from "./date";
+import { addDays, daysBetween, isoOf, todayISO } from "./date";
 import type { DomainId, Goal, Habit, LifeOSState, MomentumState } from "./types";
 
-export function habitStreak(habit: Habit): number {
+// logHabit only ever appends an entry for a day that was actually toggled —
+// untouched days simply don't exist in `history`. Streak and rate therefore
+// can't slice the array by entry count (that treats "5 ticks scattered over
+// 2 months" as "5 done days in a row"); they have to walk real calendar
+// days and check whether each one is present and done.
+function habitDoneDates(habit: Habit): Set<string> {
+  return new Set(habit.history.filter((h) => h.done).map((h) => h.date));
+}
+
+export function habitStreak(habit: Habit, today: string = todayISO()): number {
+  const done = habitDoneDates(habit);
+  // If today hasn't been logged yet, that's a day still in progress, not a
+  // broken streak — start counting from yesterday instead of zeroing out.
+  let cursor = done.has(today) ? today : addDays(today, -1);
   let streak = 0;
-  const hist = [...habit.history].reverse();
-  for (const h of hist) {
-    if (h.done) streak++;
-    else break;
+  while (done.has(cursor)) {
+    streak++;
+    cursor = addDays(cursor, -1);
   }
   return streak;
 }
 
-export function habitRate(habit: Habit, windowDays = 14): number {
-  const recent = habit.history.slice(-windowDays);
-  if (!recent.length) return 0;
-  return recent.filter((h) => h.done).length / recent.length;
+export function habitRate(habit: Habit, windowDays = 14, today: string = todayISO()): number {
+  const done = habitDoneDates(habit);
+  let count = 0;
+  for (let i = 0; i < windowDays; i++) {
+    if (done.has(addDays(today, -i))) count++;
+  }
+  return count / windowDays;
 }
 
 export interface Momentum {
@@ -33,19 +48,17 @@ export function computeMomentum(recentRate: number, priorRate: number): Momentum
   return { state: "steady", delta };
 }
 
-export function habitMomentum(habit: Habit): Momentum {
-  const recent = habit.history.slice(-10).filter((h) => h.done).length / 10;
-  const prior = habit.history.slice(-20, -10).filter((h) => h.done).length / 10;
+export function habitMomentum(habit: Habit, today: string = todayISO()): Momentum {
+  const recent = habitRate(habit, 10, today);
+  const prior = habitRate(habit, 10, addDays(today, -10));
   return computeMomentum(recent, prior);
 }
 
 export function domainMomentum(domainId: DomainId, state: LifeOSState): Momentum {
   if (domainId === "habits") {
-    const recentAvg = state.habits.reduce((a, h) => a + habitRate(h, 7), 0) / (state.habits.length || 1);
-    const priorAvg = state.habits.reduce((a, h) => {
-      const win = h.history.slice(-14, -7);
-      return a + win.filter((x) => x.done).length / (win.length || 1);
-    }, 0) / (state.habits.length || 1);
+    const today = todayISO();
+    const recentAvg = state.habits.reduce((a, h) => a + habitRate(h, 7, today), 0) / (state.habits.length || 1);
+    const priorAvg = state.habits.reduce((a, h) => a + habitRate(h, 7, addDays(today, -7)), 0) / (state.habits.length || 1);
     return computeMomentum(recentAvg, priorAvg);
   }
   if (domainId === "tasks") {
