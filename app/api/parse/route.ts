@@ -12,12 +12,20 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { text, subjects } = await req.json();
+  const { text, subjects, today: clientToday } = await req.json();
   if (!text || typeof text !== "string") {
     return NextResponse.json({ error: "Missing 'text'." }, { status: 400 });
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  // Prefer the client's local calendar date over the server's own clock —
+  // the server runs in UTC on Vercel regardless of where the user actually
+  // is, so relative dates ("tomorrow") must resolve against the user's day,
+  // not the server's. Validated as YYYY-MM-DD before trusting it in the
+  // prompt; falls back to the server's UTC date only if a caller doesn't
+  // supply one (or supplies something malformed).
+  const today = typeof clientToday === "string" && /^\d{4}-\d{2}-\d{2}$/.test(clientToday)
+    ? clientToday
+    : new Date().toISOString().slice(0, 10);
   const prompt = `You convert a short natural-language personal-productivity note into structured JSON for a life-tracking app. Today's date is ${today}. Known academic subjects: ${(subjects || []).join(", ")}.
 
 Note: "${text}"

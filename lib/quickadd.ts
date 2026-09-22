@@ -40,7 +40,7 @@ export async function parseWithAI(text: string, state: LifeOSState): Promise<Qui
   const res = await fetch("/api/parse", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text, subjects: state.subjects.map((s) => s.name) }),
+    body: JSON.stringify({ text, subjects: state.subjects.map((s) => s.name), today: todayISO() }),
   });
   if (!res.ok) throw new Error(`Parse API error ${res.status}`);
   const data = await res.json();
