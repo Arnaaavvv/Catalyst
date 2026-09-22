@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { BedDouble, Footprints, Activity, Scale, Droplet, Smile, BatteryMedium, X } from "lucide-react";
 import { domainMomentum } from "@/lib/derived";
+import { defaultHealthLogValues } from "@/lib/health";
 import { todayISO, fmtShort } from "@/lib/date";
 import Sparkline from "@/components/shared/Sparkline";
 import MomentumDial from "@/components/shared/MomentumDial";
@@ -89,9 +90,7 @@ export default function HealthView({ state, actions }: { state: LifeOSState; act
 function LogHealthModal({ state, actions, onClose }: { state: LifeOSState; actions: LifeOSActions; onClose: () => void }) {
   const existing = state.healthLogs.find((l) => l.date === todayISO());
   const last = state.healthLogs[state.healthLogs.length - 1];
-  const [vals, setVals] = useState<Omit<HealthLog, "date">>(
-    existing || { sleep: 7, steps: 6000, exerciseMin: 30, weight: last?.weight ?? 70, waterL: 1.5, mood: 3, energy: 3 }
-  );
+  const [vals, setVals] = useState<Omit<HealthLog, "date">>(existing || defaultHealthLogValues(last));
   return (
     <Portal>
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4 modal-backdrop" style={{ background: "rgba(20,18,12,0.5)" }} onMouseDown={onClose}>

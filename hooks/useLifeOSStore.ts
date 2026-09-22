@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { loadState, saveState } from "@/lib/storage";
 import { buildEmptyState, buildExampleTemplate } from "@/lib/seed";
+import { defaultHealthLogValues } from "@/lib/health";
 import { todayISO, uid, isoOf } from "@/lib/date";
 import type { LifeOSState, Priority, QuickAddResult } from "@/lib/types";
 
@@ -209,7 +210,7 @@ export function useLifeOSStore(userId: string) {
         const date = String(fields.date || todayISO());
         const metric = fields.metric as string | undefined;
         const last = s.healthLogs[s.healthLogs.length - 1];
-        const base = s.healthLogs.find((l) => l.date === date) || { ...last, date };
+        const base = s.healthLogs.find((l) => l.date === date) || { ...defaultHealthLogValues(last), date };
         const numeric = parseFloat(String(fields.value));
         const updated = metric && !isNaN(numeric) ? { ...base, [metric]: numeric } : base;
         const exists = s.healthLogs.find((l) => l.date === date);

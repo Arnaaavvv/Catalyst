@@ -134,10 +134,10 @@ export default function TodayView({ state, actions }: { state: LifeOSState; acti
                 <div className="font-mono text-[10px] text-faint tracking-wide mb-3">HEALTH SNAPSHOT</div>
                 {todaysLog ? (
                   <div className="grid grid-cols-2 gap-3">
-                    <MiniStat icon={BedDouble} label="Sleep" value={`${todaysLog.sleep}h`} color="var(--health)" />
-                    <MiniStat icon={Footprints} label="Steps" value={todaysLog.steps.toLocaleString()} color="var(--health)" />
-                    <MiniStat icon={Activity} label="Active" value={`${todaysLog.exerciseMin}m`} color="var(--health)" />
-                    <MiniStat icon={Droplet} label="Water" value={`${todaysLog.waterL}L`} color="var(--health)" />
+                    <MiniStat icon={BedDouble} label="Sleep" value={`${todaysLog.sleep ?? 0}h`} color="var(--health)" />
+                    <MiniStat icon={Footprints} label="Steps" value={(todaysLog.steps ?? 0).toLocaleString()} color="var(--health)" />
+                    <MiniStat icon={Activity} label="Active" value={`${todaysLog.exerciseMin ?? 0}m`} color="var(--health)" />
+                    <MiniStat icon={Droplet} label="Water" value={`${todaysLog.waterL ?? 0}L`} color="var(--health)" />
                   </div>
                 ) : (
                   <div className="text-xs text-dim">No health data logged yet.</div>
