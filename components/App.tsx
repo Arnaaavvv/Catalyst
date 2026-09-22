@@ -124,10 +124,10 @@ function AuthedApp({
     if (window.matchMedia("(max-width: 767px)").matches) window.scrollTo(0, 0);
   }, [view]);
 
-  if (status === "loading" || !state) {
-    return <div className="min-h-screen flex items-center justify-center"><Loading label="Loading your data" /></div>;
-  }
-
+  // Check error before loading/!state: a load failure sets status to "error"
+  // but never sets state, so state stays null — if the loading check ran
+  // first, `!state` would always be true and this error branch (and its
+  // "Try again" button) could never be reached, leaving a permanent spinner.
   if (status === "error") {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
@@ -140,6 +140,11 @@ function AuthedApp({
       </div>
     );
   }
+
+  if (status === "loading" || !state) {
+    return <div className="min-h-screen flex items-center justify-center"><Loading label="Loading your data" /></div>;
+  }
+
 
   return (
     <>
