@@ -1,11 +1,12 @@
 "use client";
 import { useState } from "react";
-import { Flame, Link2, Plus, X } from "lucide-react";
+import { Flame, Link2, Pencil, Plus, X } from "lucide-react";
 import { habitRate, habitStreak, habitMomentum, domainMomentum, MOMENTUM_META } from "@/lib/derived";
 import { todayISO } from "@/lib/date";
 import MomentumDial from "@/components/shared/MomentumDial";
 import { SectionHeader, TaskCheck, EmptyState, inputCls, FieldLabel } from "@/components/shared/Primitives";
 import Portal from "@/components/shared/Portal";
+import ConfirmModal from "@/components/shared/ConfirmModal";
 import { DOMAINS } from "@/lib/domains";
 import type { Habit, LifeOSState } from "@/lib/types";
 import type { LifeOSActions } from "@/hooks/useLifeOSStore";
@@ -24,6 +25,7 @@ function HabitHistoryRow({ habit }: { habit: Habit }) {
 
 export default function HabitsView({ state, actions }: { state: LifeOSState; actions: LifeOSActions }) {
   const [newHabitOpen, setNewHabitOpen] = useState(false);
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const mom = domainMomentum("habits", state);
   const hasHabits = state.habits.length > 0;
 
@@ -66,6 +68,9 @@ export default function HabitsView({ state, actions }: { state: LifeOSState; act
                       <Flame size={13} /> {streak}
                     </div>
                     <span className="chip" style={{ color: hm.state === "stalled" ? "var(--tasks)" : "var(--ink-dim)" }}>{MOMENTUM_META[hm.state].label}</span>
+                    <button onClick={() => setEditingHabit(h)} className="text-faint hover:text-ink p-1" aria-label="Edit habit">
+                      <Pencil size={13} />
+                    </button>
                   </div>
                   <div className="flex items-center justify-between gap-3">
                     <HabitHistoryRow habit={h} />
@@ -78,23 +83,34 @@ export default function HabitsView({ state, actions }: { state: LifeOSState; act
         </>
       )}
 
-      {newHabitOpen && <NewHabitModal state={state} actions={actions} onClose={() => setNewHabitOpen(false)} />}
+      {newHabitOpen && <HabitModal state={state} actions={actions} onClose={() => setNewHabitOpen(false)} />}
+      {editingHabit && <HabitModal state={state} actions={actions} existing={editingHabit} onClose={() => setEditingHabit(null)} />}
     </div>
   );
 }
 
-function NewHabitModal({ state, actions, onClose }: { state: LifeOSState; actions: LifeOSActions; onClose: () => void }) {
-  const [name, setName] = useState("");
-  const [target, setTarget] = useState(4);
-  const [unit, setUnit] = useState("days/wk");
-  const [linkedGoalId, setLinkedGoalId] = useState<string>("");
+function HabitModal({
+  state, actions, onClose, existing,
+}: { state: LifeOSState; actions: LifeOSActions; onClose: () => void; existing?: Habit }) {
+  const [name, setName] = useState(existing?.name ?? "");
+  const [target, setTarget] = useState(existing?.target ?? 4);
+  const [unit, setUnit] = useState(existing?.unit ?? "days/wk");
+  const [linkedGoalId, setLinkedGoalId] = useState<string>(existing?.linkedGoalId ?? "");
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
+  function submit() {
+    if (!name.trim()) return;
+    if (existing) actions.editHabit(existing.id, name.trim(), target, unit, linkedGoalId || null);
+    else actions.addHabit(name.trim(), target, unit, linkedGoalId || null);
+    onClose();
+  }
 
   return (
     <Portal>
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4 modal-backdrop" style={{ background: "rgba(20,18,12,0.5)" }} onMouseDown={onClose}>
       <div className="modal-panel surface rounded-2xl p-5 w-full max-w-[400px]" onMouseDown={(e) => e.stopPropagation()} style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}>
         <div className="flex items-center justify-between mb-4">
-          <span className="font-display text-lg">New habit</span>
+          <span className="font-display text-lg">{existing ? "Edit habit" : "New habit"}</span>
           <button onClick={onClose}><X size={16} className="text-faint" /></button>
         </div>
         <div className="space-y-3">
@@ -122,14 +138,27 @@ function NewHabitModal({ state, actions, onClose }: { state: LifeOSState; action
             </div>
           )}
         </div>
-        <button
-          onClick={() => { if (name.trim()) { actions.addHabit(name.trim(), target, unit, linkedGoalId || null); onClose(); } }}
-          className="btn-primary w-full mt-4 py-2.5 rounded-lg text-sm"
-        >
-          Create habit
-        </button>
+        <div className="flex gap-2 mt-4">
+          {existing && (
+            <button onClick={() => setConfirmDeleteOpen(true)} className="py-2.5 px-4 rounded-lg text-sm hairline border" style={{ color: "var(--tasks)" }}>
+              Delete
+            </button>
+          )}
+          <button onClick={submit} className="btn-primary flex-1 py-2.5 rounded-lg text-sm">
+            {existing ? "Save changes" : "Create habit"}
+          </button>
+        </div>
       </div>
-    </div>
+      </div>
+      {existing && confirmDeleteOpen && (
+        <ConfirmModal
+          title="Delete habit?"
+          message={`This permanently deletes "${existing.name}" and its entire logged history. This can't be undone.`}
+          confirmLabel="Delete habit"
+          onCancel={() => setConfirmDeleteOpen(false)}
+          onConfirm={() => { actions.deleteHabit(existing.id); onClose(); }}
+        />
+      )}
     </Portal>
   );
 }

@@ -1,13 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
-import { X, Target } from "lucide-react";
+import { X, Target, Pencil } from "lucide-react";
 import { domainMomentum, goalProgress, habitRate } from "@/lib/derived";
 import { fmtShort, isoOf } from "@/lib/date";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import MomentumDial from "@/components/shared/MomentumDial";
 import { SectionHeader, TaskCheck, EmptyState, inputCls, FieldLabel } from "@/components/shared/Primitives";
 import Portal from "@/components/shared/Portal";
-import type { LifeOSState } from "@/lib/types";
+import ConfirmModal from "@/components/shared/ConfirmModal";
+import type { Goal, LifeOSState } from "@/lib/types";
 import type { LifeOSActions } from "@/hooks/useLifeOSStore";
 import { Flame, Plus } from "lucide-react";
 
@@ -114,6 +115,7 @@ function ConstellationMap({
 export default function GoalsView({ state, actions }: { state: LifeOSState; actions: LifeOSActions }) {
   const [selected, setSelected] = useState<string | null>(state.goals[0]?.id || null);
   const [newGoalOpen, setNewGoalOpen] = useState(false);
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const compact = useMediaQuery("(max-width: 767px)");
   const goal = state.goals.find((g) => g.id === selected);
   const mom = domainMomentum("goals", state);
@@ -121,8 +123,12 @@ export default function GoalsView({ state, actions }: { state: LifeOSState; acti
 
   // If goals start empty and the person adds their first one, select it
   // automatically instead of leaving the detail panel permanently blank.
+  // Also re-selects when `selected` no longer matches any current goal —
+  // e.g. the selected goal was just deleted — rather than leaving the panel
+  // stuck pointing at a goal that no longer exists.
   useEffect(() => {
-    if (!selected && state.goals[0]) setSelected(state.goals[0].id);
+    if (selected && state.goals.some((g) => g.id === selected)) return;
+    setSelected(state.goals[0]?.id ?? null);
   }, [state.goals, selected]);
 
   return (
@@ -152,7 +158,12 @@ export default function GoalsView({ state, actions }: { state: LifeOSState; acti
               <div className="surface rounded-xl p-4 min-w-0">
                 <div className="flex items-start justify-between mb-1">
                   <h3 className="font-display text-xl" style={{ maxWidth: 280 }}>{goal.title}</h3>
-                  <MomentumDial state={mom.state} color="var(--goals)" size={48} />
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button onClick={() => setEditingGoal(goal)} className="text-faint hover:text-ink p-1" aria-label="Edit goal">
+                      <Pencil size={14} />
+                    </button>
+                    <MomentumDial state={mom.state} color="var(--goals)" size={48} />
+                  </div>
                 </div>
                 <div className="font-mono text-[10px] text-faint mb-4">due {fmtShort(goal.deadline)} · {Math.round(goalProgress(goal) * 100)}% complete</div>
                 <div className="space-y-1">
@@ -161,9 +172,13 @@ export default function GoalsView({ state, actions }: { state: LifeOSState; acti
                       <TaskCheck done={m.done} onClick={() => actions.toggleMilestone(goal.id, m.id)} />
                       <span className={`text-sm flex-1 min-w-0 ${m.done ? "line-through text-faint" : ""}`}>{m.title}</span>
                       <span className="font-mono text-[10px] text-faint">{fmtShort(m.date)}</span>
+                      <button onClick={() => actions.deleteMilestone(goal.id, m.id)} className="text-faint hover:text-ink p-0.5" aria-label="Delete milestone">
+                        <X size={12} />
+                      </button>
                     </div>
                   ))}
                 </div>
+                <AddMilestoneRow goalId={goal.id} actions={actions} />
               </div>
               <div className="surface rounded-xl p-4 min-w-0">
                 <div className="font-mono text-[10px] text-faint tracking-wide mb-3">LINKED HABITS</div>
@@ -186,27 +201,90 @@ export default function GoalsView({ state, actions }: { state: LifeOSState; acti
         </>
       )}
 
-      {newGoalOpen && <NewGoalModal actions={actions} onClose={() => setNewGoalOpen(false)} />}
+      {newGoalOpen && <GoalModal actions={actions} onClose={() => setNewGoalOpen(false)} />}
+      {editingGoal && <GoalModal actions={actions} existing={editingGoal} onClose={() => setEditingGoal(null)} />}
     </div>
   );
 }
 
-function NewGoalModal({ actions, onClose }: { actions: LifeOSActions; onClose: () => void }) {
+function AddMilestoneRow({ goalId, actions }: { goalId: string; actions: LifeOSActions }) {
+  const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
-  const [deadline, setDeadline] = useState(isoOf(30));
+  const [date, setDate] = useState(isoOf(14));
+
+  function submit() {
+    if (!title.trim()) return;
+    actions.addMilestone(goalId, title.trim(), date);
+    setTitle("");
+    setOpen(false);
+  }
+
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)} className="row-hover w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left text-xs text-dim mt-1">
+        <Plus size={12} /> Add milestone
+      </button>
+    );
+  }
+  return (
+    <div className="flex items-center gap-2 mt-1 px-2">
+      <input
+        autoFocus
+        className={inputCls}
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") submit(); if (e.key === "Escape") setOpen(false); }}
+        placeholder="Milestone title"
+      />
+      <input type="date" className={inputCls} style={{ width: 130 }} value={date} onChange={(e) => setDate(e.target.value)} />
+      <button onClick={submit} className="btn-primary text-xs px-2.5 py-2 rounded-lg flex-shrink-0" aria-label="Add milestone">
+        <Plus size={13} />
+      </button>
+    </div>
+  );
+}
+
+function GoalModal({ actions, onClose, existing }: { actions: LifeOSActions; onClose: () => void; existing?: Goal }) {
+  const [title, setTitle] = useState(existing?.title ?? "");
+  const [deadline, setDeadline] = useState(existing?.deadline ?? isoOf(30));
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
+  function submit() {
+    if (!title.trim()) return;
+    if (existing) actions.editGoal(existing.id, title.trim(), deadline);
+    else actions.addGoal(title.trim(), deadline);
+    onClose();
+  }
+
   return (
     <Portal>
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4 modal-backdrop" style={{ background: "rgba(20,18,12,0.5)" }} onMouseDown={onClose}>
         <div className="modal-panel surface rounded-2xl p-5 w-full max-w-[400px]" onMouseDown={(e) => e.stopPropagation()} style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}>
-          <div className="flex items-center justify-between mb-4"><span className="font-display text-lg">New goal</span><button onClick={onClose}><X size={16} className="text-faint" /></button></div>
+          <div className="flex items-center justify-between mb-4"><span className="font-display text-lg">{existing ? "Edit goal" : "New goal"}</span><button onClick={onClose}><X size={16} className="text-faint" /></button></div>
           <FieldLabel>Title</FieldLabel>
           <input autoFocus className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What are you working toward?" />
           <div className="h-3" />
           <FieldLabel>Deadline</FieldLabel>
           <input type="date" className={inputCls} value={deadline} onChange={(e) => setDeadline(e.target.value)} />
-          <button onClick={() => { if (title.trim()) { actions.addGoal(title, deadline); onClose(); } }} className="btn-primary w-full mt-4 py-2.5 rounded-lg text-sm">Create goal</button>
+          <div className="flex gap-2 mt-4">
+            {existing && (
+              <button onClick={() => setConfirmDeleteOpen(true)} className="py-2.5 px-4 rounded-lg text-sm hairline border" style={{ color: "var(--tasks)" }}>
+                Delete
+              </button>
+            )}
+            <button onClick={submit} className="btn-primary flex-1 py-2.5 rounded-lg text-sm">{existing ? "Save changes" : "Create goal"}</button>
+          </div>
         </div>
       </div>
+      {existing && confirmDeleteOpen && (
+        <ConfirmModal
+          title="Delete goal?"
+          message={`This permanently deletes "${existing.title}" and all its milestones. Habits and tasks linked to it will stay, just unlinked. This can't be undone.`}
+          confirmLabel="Delete goal"
+          onCancel={() => setConfirmDeleteOpen(false)}
+          onConfirm={() => { actions.deleteGoal(existing.id); onClose(); }}
+        />
+      )}
     </Portal>
   );
 }
