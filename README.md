@@ -56,7 +56,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 GEMINI_API_KEY=your-gemini-key   # optional — falls back to regex parsing if omitted
 ```
 
-Run the schema (`supabase/schema.sql`) in your Supabase project's SQL editor — note the [May 2026 privilege change](#): `GRANT` statements for the `authenticated` role must be explicit, they're no longer automatic. Then:
+Run the schema (`supabase/schema.sql`) in your Supabase project's SQL editor.
+Then:
 
 ```bash
 npm run dev
