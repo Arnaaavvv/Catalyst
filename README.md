@@ -29,7 +29,6 @@ Sign up, and your Today view, Goals map, and Academics module are ready to go �
 - **📈 Life Pulse & Momentum Dials** — rolling visualizations of how health, habits, and goals are trending, not just static snapshots
 - **🎓 Academics** — subjects, assignments, and grades live in the same data model as everything else
 - **🌗 Dark mode** — applied at the document root with a blocking anti-flash script, so there's no light-mode flash on load
-- **☁️ Local-first, cloud-synced** — Supabase-backed with Row Level Security, so your data is yours
 
 ## 🛠 Tech Stack
 
