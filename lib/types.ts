@@ -48,6 +48,11 @@ export interface Task {
   priority: Priority;
   due: string | null;
   done: boolean;
+  // When this was actually marked done — distinct from `due`, which is
+  // when it was supposed to happen. Timeline/LifePulse need the former;
+  // using `due` as a stand-in dates a task by when it was planned, not
+  // when the work actually happened.
+  completedAt: string | null;
   subtasks: Subtask[];
   recurring: "daily" | "weekly" | null;
   linkedGoalId: string | null;
@@ -65,6 +70,7 @@ export interface Assignment {
   title: string;
   due: string;
   done: boolean;
+  completedAt: string | null;
   grade: string | null;
   weight: "low" | "med" | "high" | "exam";
 }

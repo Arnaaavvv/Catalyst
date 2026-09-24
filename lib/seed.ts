@@ -44,12 +44,12 @@ export function buildExampleTemplate(): LifeOSState {
   ];
 
   const assignments: Assignment[] = [
-    { id: uid("as"), subjectId: "sub_ml", title: "Assignment 3 — Gradient Boosting", due: isoOf(2), done: false, grade: null, weight: "high" },
-    { id: uid("as"), subjectId: "sub_os", title: "Lab 5 — Scheduler Simulation", due: isoOf(4), done: false, grade: null, weight: "med" },
-    { id: uid("as"), subjectId: "sub_stat", title: "Problem Set 6", due: isoOf(-2), done: true, grade: "A-", weight: "med" },
-    { id: uid("as"), subjectId: "sub_dsa", title: "Midterm Exam", due: isoOf(9), done: false, grade: null, weight: "exam" },
-    { id: uid("as"), subjectId: "sub_ml", title: "Reading Response — Ch. 7", due: isoOf(-5), done: true, grade: "B+", weight: "low" },
-    { id: uid("as"), subjectId: "sub_os", title: "Quiz — Deadlock & Sync", due: isoOf(1), done: false, grade: null, weight: "med" },
+    { id: uid("as"), subjectId: "sub_ml", title: "Assignment 3 — Gradient Boosting", due: isoOf(2), done: false, completedAt: null, grade: null, weight: "high" },
+    { id: uid("as"), subjectId: "sub_os", title: "Lab 5 — Scheduler Simulation", due: isoOf(4), done: false, completedAt: null, grade: null, weight: "med" },
+    { id: uid("as"), subjectId: "sub_stat", title: "Problem Set 6", due: isoOf(-2), done: true, completedAt: isoOf(-2), grade: "A-", weight: "med" },
+    { id: uid("as"), subjectId: "sub_dsa", title: "Midterm Exam", due: isoOf(9), done: false, completedAt: null, grade: null, weight: "exam" },
+    { id: uid("as"), subjectId: "sub_ml", title: "Reading Response — Ch. 7", due: isoOf(-5), done: true, completedAt: isoOf(-6), grade: "B+", weight: "low" },
+    { id: uid("as"), subjectId: "sub_os", title: "Quiz — Deadlock & Sync", due: isoOf(1), done: false, completedAt: null, grade: null, weight: "med" },
   ];
 
   const studySessions: StudySession[] = [
@@ -113,19 +113,19 @@ export function buildExampleTemplate(): LifeOSState {
   ];
 
   const tasks: Task[] = [
-    { id: uid("t"), title: "Finish onboarding flow wireframes", project: "Capstone", priority: "high", due: isoOf(0), done: false, subtasks: [
+    { id: uid("t"), title: "Finish onboarding flow wireframes", project: "Capstone", priority: "high", due: isoOf(0), done: false, completedAt: null, subtasks: [
       { id: uid("sub"), title: "Sketch empty states", done: true },
       { id: uid("sub"), title: "Review with mentor", done: false },
     ], recurring: null, linkedGoalId: "goal_thesis" },
-    { id: uid("t"), title: "Push weekly progress commit", project: "Capstone", priority: "med", due: isoOf(0), done: false, subtasks: [], recurring: "weekly", linkedGoalId: "goal_thesis" },
-    { id: uid("t"), title: "Buy new running shoes", project: "Personal", priority: "low", due: isoOf(3), done: false, subtasks: [], recurring: null, linkedGoalId: "goal_fitness" },
-    { id: uid("t"), title: "Email TA about extension", project: "Academics", priority: "high", due: isoOf(0), done: false, subtasks: [], recurring: null, linkedGoalId: "goal_gpa" },
-    { id: uid("t"), title: "Refill water bottle before gym", project: "Personal", priority: "low", due: isoOf(0), done: true, subtasks: [], recurring: "daily", linkedGoalId: null },
-    { id: uid("t"), title: "Draft README for capstone repo", project: "Capstone", priority: "med", due: isoOf(2), done: false, subtasks: [], recurring: null, linkedGoalId: "goal_thesis" },
-    { id: uid("t"), title: "Book dentist appointment", project: "Personal", priority: "low", due: isoOf(6), done: false, subtasks: [], recurring: null, linkedGoalId: null },
-    { id: uid("t"), title: "Review OS lab feedback", project: "Academics", priority: "med", due: isoOf(-1), done: false, subtasks: [], recurring: null, linkedGoalId: "goal_gpa" },
-    { id: uid("t"), title: "Plan next chapter — reading list", project: "Personal", priority: "low", due: null, done: false, subtasks: [], recurring: null, linkedGoalId: "goal_reading" },
-    { id: uid("t"), title: "Sync with capstone mentor", project: "Capstone", priority: "high", due: isoOf(1), done: false, subtasks: [], recurring: null, linkedGoalId: "goal_thesis" },
+    { id: uid("t"), title: "Push weekly progress commit", project: "Capstone", priority: "med", due: isoOf(0), done: false, completedAt: null, subtasks: [], recurring: "weekly", linkedGoalId: "goal_thesis" },
+    { id: uid("t"), title: "Buy new running shoes", project: "Personal", priority: "low", due: isoOf(3), done: false, completedAt: null, subtasks: [], recurring: null, linkedGoalId: "goal_fitness" },
+    { id: uid("t"), title: "Email TA about extension", project: "Academics", priority: "high", due: isoOf(0), done: false, completedAt: null, subtasks: [], recurring: null, linkedGoalId: "goal_gpa" },
+    { id: uid("t"), title: "Refill water bottle before gym", project: "Personal", priority: "low", due: isoOf(0), done: true, completedAt: isoOf(-1), subtasks: [], recurring: "daily", linkedGoalId: null },
+    { id: uid("t"), title: "Draft README for capstone repo", project: "Capstone", priority: "med", due: isoOf(2), done: false, completedAt: null, subtasks: [], recurring: null, linkedGoalId: "goal_thesis" },
+    { id: uid("t"), title: "Book dentist appointment", project: "Personal", priority: "low", due: isoOf(6), done: false, completedAt: null, subtasks: [], recurring: null, linkedGoalId: null },
+    { id: uid("t"), title: "Review OS lab feedback", project: "Academics", priority: "med", due: isoOf(-1), done: false, completedAt: null, subtasks: [], recurring: null, linkedGoalId: "goal_gpa" },
+    { id: uid("t"), title: "Plan next chapter — reading list", project: "Personal", priority: "low", due: null, done: false, completedAt: null, subtasks: [], recurring: null, linkedGoalId: "goal_reading" },
+    { id: uid("t"), title: "Sync with capstone mentor", project: "Capstone", priority: "high", due: isoOf(1), done: false, completedAt: null, subtasks: [], recurring: null, linkedGoalId: "goal_thesis" },
   ];
 
   const healthLogs = genHealthHistory(30);

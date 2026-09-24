@@ -120,8 +120,11 @@ export interface TimelineEvent {
 export function buildTimeline(state: LifeOSState): TimelineEvent[] {
   const events: TimelineEvent[] = [];
 
+  // completedAt is the actual completion date; due is only a fallback for
+  // legacy rows saved before that field existed (where it'd be undefined,
+  // not null, since it simply didn't exist in the stored JSON yet).
   state.tasks.filter((t) => t.done).forEach((t) =>
-    events.push({ id: t.id, date: t.due || todayISO(), domain: "tasks", kind: "Task completed", title: t.title, linkTo: t.linkedGoalId })
+    events.push({ id: t.id, date: t.completedAt ?? t.due ?? todayISO(), domain: "tasks", kind: "Task completed", title: t.title, linkTo: t.linkedGoalId })
   );
   state.habits.forEach((h) =>
     h.history.filter((x) => x.done).slice(-6).forEach((x) =>
@@ -137,7 +140,7 @@ export function buildTimeline(state: LifeOSState): TimelineEvent[] {
     )
   );
   state.assignments.filter((a) => a.done).forEach((a) =>
-    events.push({ id: a.id, date: a.due, domain: "academics", kind: "Assignment submitted", title: a.title, linkTo: null })
+    events.push({ id: a.id, date: a.completedAt ?? a.due, domain: "academics", kind: "Assignment submitted", title: a.title, linkTo: null })
   );
   state.studySessions.forEach((s) =>
     events.push({ id: s.id, date: s.date, domain: "academics", kind: "Study session", title: `${s.topic} · ${s.duration}min`, linkTo: null })

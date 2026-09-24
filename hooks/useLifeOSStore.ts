@@ -113,7 +113,10 @@ export function useLifeOSStore(userId: string) {
   }, [state, status, userId]);
 
   const actions: LifeOSActions = useMemo(() => ({
-    toggleTask: (id) => setState((s) => s && { ...s, tasks: s.tasks.map((t) => t.id === id ? { ...t, done: !t.done } : t) }),
+    toggleTask: (id) => setState((s) => s && {
+      ...s,
+      tasks: s.tasks.map((t) => t.id === id ? { ...t, done: !t.done, completedAt: !t.done ? todayISO() : null } : t),
+    }),
 
     toggleSubtask: (taskId, subId) => setState((s) => s && {
       ...s,
@@ -122,7 +125,7 @@ export function useLifeOSStore(userId: string) {
 
     addTask: (title, due) => setState((s) => s && {
       ...s,
-      tasks: [{ id: uid("t"), title, project: "Inbox", priority: "med" as Priority, due, done: false, subtasks: [], recurring: null, linkedGoalId: null }, ...s.tasks],
+      tasks: [{ id: uid("t"), title, project: "Inbox", priority: "med" as Priority, due, done: false, completedAt: null, subtasks: [], recurring: null, linkedGoalId: null }, ...s.tasks],
     }),
 
     // Doesn't touch subtasks, recurring, done, or linkedGoalId — none of
@@ -134,7 +137,10 @@ export function useLifeOSStore(userId: string) {
 
     deleteTask: (id) => setState((s) => s && { ...s, tasks: s.tasks.filter((t) => t.id !== id) }),
 
-    toggleAssignment: (id) => setState((s) => s && { ...s, assignments: s.assignments.map((a) => a.id === id ? { ...a, done: !a.done } : a) }),
+    toggleAssignment: (id) => setState((s) => s && {
+      ...s,
+      assignments: s.assignments.map((a) => a.id === id ? { ...a, done: !a.done, completedAt: !a.done ? todayISO() : null } : a),
+    }),
 
     editAssignment: (id, title, subjectId, due, weight, grade) => setState((s) => s && {
       ...s,
@@ -271,7 +277,7 @@ export function useLifeOSStore(userId: string) {
       if (type === "task") {
         return { ...s, tasks: [{
           id: uid("t"), title: String(fields.title || "Untitled task"), project: String(fields.project || "Inbox"),
-          priority: (fields.priority as Priority) || "med", due: (fields.due as string) || null, done: false,
+          priority: (fields.priority as Priority) || "med", due: (fields.due as string) || null, done: false, completedAt: null,
           subtasks: [], recurring: null, linkedGoalId: null,
         }, ...s.tasks] };
       }
@@ -287,7 +293,7 @@ export function useLifeOSStore(userId: string) {
           || s.subjects.find((x) => x.id === fields.subjectId) || s.subjects[0];
         return { ...s, assignments: [...s.assignments, {
           id: uid("as"), subjectId: subj?.id || "", title: String(fields.title || "Untitled assignment"),
-          due: String(fields.due || isoOf(3)), done: false, grade: null, weight: "med" as const,
+          due: String(fields.due || isoOf(3)), done: false, completedAt: null, grade: null, weight: "med" as const,
         }] };
       }
       if (type === "study") {

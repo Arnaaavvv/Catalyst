@@ -13,12 +13,17 @@ export default function LifePulse({ state, compact = false }: { state: LifeOSSta
   const beatDates = useMemo(() => {
     const map: Record<string, Set<string>> = {};
     lanes.forEach((d) => (map[d] = new Set()));
-    state.tasks.filter((t) => t.done && t.due).forEach((t) => map.tasks.add(t.due as string));
+    // completedAt is the actual completion date; due is only a fallback for
+    // legacy rows saved before that field existed on Task/Assignment.
+    state.tasks.filter((t) => t.done).forEach((t) => {
+      const d = t.completedAt ?? t.due;
+      if (d) map.tasks.add(d);
+    });
     state.habits.forEach((h) => h.history.forEach((x) => x.done && map.habits.add(x.date)));
     state.healthLogs.forEach((l) => map.health.add(l.date));
     state.goals.forEach((g) => g.milestones.forEach((m) => m.done && map.goals.add(m.date)));
     state.studySessions.forEach((s) => map.academics.add(s.date));
-    state.assignments.filter((a) => a.done).forEach((a) => map.academics.add(a.due));
+    state.assignments.filter((a) => a.done).forEach((a) => map.academics.add(a.completedAt ?? a.due));
     return map;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
