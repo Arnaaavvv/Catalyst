@@ -30,7 +30,25 @@ export default function TodayView({ state, actions }: { state: LifeOSState; acti
     const doms = Object.keys(DOMAINS) as (keyof typeof DOMAINS)[];
     const states = doms.map((d) => domainMomentum(d, state).state);
     const accel = states.filter((s) => s === "accelerating" || s === "steady").length;
-    const dayNum = Math.abs(daysBetween(state.goals[0]?.createdAt || today, today)) + 1;
+    // "Day N" should reflect the earliest genuinely-tracked activity across
+    // every domain, not just whichever goal happens to sit first in the
+    // array (which breaks the moment an earlier goal is deleted) — and not
+    // "no goal exists yet" collapsing to a permanent Day 1 even for someone
+    // who's been logging habits or health data for months without ever
+    // making a goal. Only dates that record something that actually
+    // happened are used — due dates are excluded since they're arbitrary
+    // targets a user can backdate, which would inflate the count.
+    const trackedDates: string[] = [
+      ...state.goals.map((g) => g.createdAt),
+      ...state.goals.flatMap((g) => g.milestones.filter((m) => m.done).map((m) => m.date)),
+      ...state.habits.flatMap((h) => h.history.map((x) => x.date)),
+      ...state.healthLogs.map((l) => l.date),
+      ...state.studySessions.map((s) => s.date),
+      ...state.tasks.filter((t) => t.completedAt).map((t) => t.completedAt as string),
+      ...state.assignments.filter((a) => a.completedAt).map((a) => a.completedAt as string),
+    ];
+    const earliest = trackedDates.length ? trackedDates.reduce((a, b) => (b < a ? b : a)) : today;
+    const dayNum = Math.abs(daysBetween(earliest, today)) + 1;
     return `Day ${dayNum} of tracking. Momentum steady or better across ${accel} of ${doms.length} domains.`;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, isBlank]);
