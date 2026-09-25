@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import { BedDouble, Footprints, Activity, Droplet, Sparkles, Info } from "lucide-react";
 import { todayISO, fmtDay, fmtShort, daysBetween } from "@/lib/date";
-import { habitStreak, domainMomentum, goalProgress } from "@/lib/derived";
+import { habitStreak, domainMomentum, goalProgress, trackedDates as getTrackedDates } from "@/lib/derived";
 import { DOMAINS } from "@/lib/domains";
 import LifePulse from "@/components/shared/LifePulse";
 import { EmptyState, TaskCheck, MiniStat } from "@/components/shared/Primitives";
@@ -35,19 +35,11 @@ export default function TodayView({ state, actions }: { state: LifeOSState; acti
     // array (which breaks the moment an earlier goal is deleted) — and not
     // "no goal exists yet" collapsing to a permanent Day 1 even for someone
     // who's been logging habits or health data for months without ever
-    // making a goal. Only dates that record something that actually
-    // happened are used — due dates are excluded since they're arbitrary
-    // targets a user can backdate, which would inflate the count.
-    const trackedDates: string[] = [
-      ...state.goals.map((g) => g.createdAt),
-      ...state.goals.flatMap((g) => g.milestones.filter((m) => m.done).map((m) => m.date)),
-      ...state.habits.flatMap((h) => h.history.map((x) => x.date)),
-      ...state.healthLogs.map((l) => l.date),
-      ...state.studySessions.map((s) => s.date),
-      ...state.tasks.filter((t) => t.completedAt).map((t) => t.completedAt as string),
-      ...state.assignments.filter((a) => a.completedAt).map((a) => a.completedAt as string),
-    ];
-    const earliest = trackedDates.length ? trackedDates.reduce((a, b) => (b < a ? b : a)) : today;
+    // making a goal. trackedDates (lib/derived.ts) is the same "what counts
+    // as genuinely tracked" rule the account streak badge uses, so the two
+    // numbers can't quietly disagree.
+    const dates = [...getTrackedDates(state)];
+    const earliest = dates.length ? dates.reduce((a, b) => (b < a ? b : a)) : today;
     const dayNum = Math.abs(daysBetween(earliest, today)) + 1;
     return `Day ${dayNum} of tracking. Momentum steady or better across ${accel} of ${doms.length} domains.`;
     // eslint-disable-next-line react-hooks/exhaustive-deps

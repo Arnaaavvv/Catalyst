@@ -10,17 +10,24 @@ function habitDoneDates(habit: Habit): Set<string> {
   return new Set(habit.history.filter((h) => h.done).map((h) => h.date));
 }
 
-export function habitStreak(habit: Habit, today: string = todayISO()): number {
-  const done = habitDoneDates(habit);
-  // If today hasn't been logged yet, that's a day still in progress, not a
-  // broken streak — start counting from yesterday instead of zeroing out.
-  let cursor = done.has(today) ? today : addDays(today, -1);
+// Walks backward from `today` through a set of dates, counting a
+// consecutive run. If `today` itself isn't in the set yet, that's treated
+// as a day still in progress rather than a broken streak — start counting
+// from yesterday instead of zeroing out. Shared by per-habit streaks and
+// the account-wide tracking streak below, so the "what counts as still
+// live today" rule can't quietly drift between the two.
+function consecutiveStreak(dates: Set<string>, today: string): number {
+  let cursor = dates.has(today) ? today : addDays(today, -1);
   let streak = 0;
-  while (done.has(cursor)) {
+  while (dates.has(cursor)) {
     streak++;
     cursor = addDays(cursor, -1);
   }
   return streak;
+}
+
+export function habitStreak(habit: Habit, today: string = todayISO()): number {
+  return consecutiveStreak(habitDoneDates(habit), today);
 }
 
 export function habitRate(habit: Habit, windowDays = 14, today: string = todayISO()): number {
@@ -30,6 +37,35 @@ export function habitRate(habit: Habit, windowDays = 14, today: string = todayIS
     if (done.has(addDays(today, -i))) count++;
   }
   return count / windowDays;
+}
+
+// Every calendar day with at least one piece of genuinely tracked activity,
+// across every domain: goal creation, milestone completions, habit history
+// entries (done or not — presence itself means the person was engaging
+// with tracking that day), health logs, study sessions, and task/
+// assignment completions. Due dates are deliberately excluded — they're
+// arbitrary targets a person can set in the past or future, not a record
+// that something actually happened on that day, and including them would
+// let a single backdated item wrongly inflate a streak or tracking count.
+export function trackedDates(state: LifeOSState): Set<string> {
+  const dates = new Set<string>();
+  state.goals.forEach((g) => dates.add(g.createdAt));
+  state.goals.forEach((g) => g.milestones.forEach((m) => m.done && dates.add(m.date)));
+  state.habits.forEach((h) => h.history.forEach((x) => dates.add(x.date)));
+  state.healthLogs.forEach((l) => dates.add(l.date));
+  state.studySessions.forEach((s) => dates.add(s.date));
+  state.tasks.forEach((t) => t.completedAt && dates.add(t.completedAt));
+  state.assignments.forEach((a) => a.completedAt && dates.add(a.completedAt));
+  return dates;
+}
+
+// Consecutive days of any tracked activity, account-wide — the same rule
+// habitStreak applies to one habit's history, applied to trackedDates
+// instead. A day still in progress (nothing logged yet today) doesn't
+// zero the streak, matching the same no-punishing-streaks reasoning as
+// individual habit streaks.
+export function accountStreak(state: LifeOSState, today: string = todayISO()): number {
+  return consecutiveStreak(trackedDates(state), today);
 }
 
 export interface Momentum {

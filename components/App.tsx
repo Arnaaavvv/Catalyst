@@ -151,7 +151,7 @@ function AuthedApp({
       <div className="flex">
         <NavRail view={view} setView={setView} dark={dark} setDark={setDark} user={user} state={state} onLogOut={onLogOut} onClearData={actions.clearAllData} onUserUpdate={onUserUpdate} />
         <div className="flex-1 min-w-0">
-          <TopBar onQuickAdd={() => setPaletteOpen(true)} />
+          <TopBar state={state} onQuickAdd={() => setPaletteOpen(true)} />
           <div className="px-4 md:px-8 pt-5 md:pt-6 app-content max-w-[1080px]">
             <ViewComponent state={state} actions={actions} />
           </div>
