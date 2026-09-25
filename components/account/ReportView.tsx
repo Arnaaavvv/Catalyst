@@ -84,7 +84,29 @@ export default function ReportView({
           app's current theme, so the on-screen preview matches the
           printed/PDF output exactly instead of showing a dark backdrop
           around a light content rectangle. */}
-      <div className="fixed inset-0 z-50 overflow-y-auto scrollbar-thin" style={{ ...PRINT_VARS, background: "var(--bg)" }}>
+      <div className="report-modal-root fixed inset-0 z-50 overflow-y-auto scrollbar-thin" style={{ ...PRINT_VARS, background: "var(--bg)" }}>
+        {/* `fixed` + `overflow-y-auto` above is required for the on-screen
+            scrollable modal, but it's exactly the combination that makes
+            Chrome's print engine clip everything outside the current
+            viewport instead of flowing content across pages — the report
+            was silently truncating after "Life Pulse" because of this.
+            These print-only overrides put the wrapper (and <html>/<body>,
+            in case a scroll-lock has set overflow:hidden there) back into
+            normal flow so print pagination can walk the full content. */}
+        <style>{`
+          @media print {
+            html, body {
+              overflow: visible !important;
+              height: auto !important;
+            }
+            .report-modal-root {
+              position: static !important;
+              inset: auto !important;
+              overflow: visible !important;
+              height: auto !important;
+            }
+          }
+        `}</style>
         <div className="no-print sticky top-0 z-10 flex items-center justify-between px-4 sm:px-5 py-3" style={{ background: "var(--surface)", borderBottom: "1px solid var(--line)" }}>
           <span className="text-sm font-medium">Report preview</span>
           <div className="flex items-center gap-2">
