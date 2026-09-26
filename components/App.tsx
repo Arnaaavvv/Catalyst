@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { AlertCircle, Plus } from "lucide-react";
+import { AlertCircle, Flame, Plus } from "lucide-react";
 import { getSessionUser, logOut, onAuthChange, type PublicUser } from "@/lib/auth";
 import { useLifeOSStore } from "@/hooks/useLifeOSStore";
+import { trackedDates } from "@/lib/derived";
+import { todayISO } from "@/lib/date";
 import AuthScreen from "@/components/auth/AuthScreen";
 import NavRail from "@/components/layout/NavRail";
 import MobileNav from "@/components/layout/MobileNav";
@@ -117,6 +119,36 @@ function AuthedApp({
 }) {
   const { state, status, loadError, saveError, actions, retry } = useLifeOSStore(user.id);
   const ViewComponent = VIEWS[view];
+  const [dailyToastVisible, setDailyToastVisible] = useState(false);
+
+  // Fires "+1 Daily tracking" the moment today has its first piece of
+  // tracked activity, then never again today — even across reloads — via a
+  // localStorage flag scoped to this user and this calendar date. Only
+  // ever flips the toast ON; the effect below owns turning it back off, so
+  // further state changes while it's showing can't cancel its dismiss
+  // timer without restarting it (naively combining both concerns in one
+  // effect would do exactly that, since a re-run's cleanup clears the
+  // pending timeout but an already-shown-today guard skips setting a new
+  // one — leaving the toast stuck on screen).
+  useEffect(() => {
+    if (!state) return;
+    const today = todayISO();
+    if (!trackedDates(state).has(today)) return;
+    const key = `catalyst:daily-toast:${user.id}:${today}`;
+    try {
+      if (window.localStorage.getItem(key) === "1") return;
+      window.localStorage.setItem(key, "1");
+    } catch {
+      return; // can't confirm we won't show it again later today — skip rather than risk repeating
+    }
+    setDailyToastVisible(true);
+  }, [state, user.id]);
+
+  useEffect(() => {
+    if (!dailyToastVisible) return;
+    const t = setTimeout(() => setDailyToastVisible(false), 3200);
+    return () => clearTimeout(t);
+  }, [dailyToastVisible]);
 
   // The bottom tab bar swaps whole pages while the window keeps its scroll
   // offset, so a new view would open halfway down. Desktop is left as it was.
@@ -170,6 +202,12 @@ function AuthedApp({
       {saveError && (
         <div className="fixed mobile-toast left-4 chip z-40" style={{ color: "var(--tasks)", background: "var(--surface)" }}>
           <AlertCircle size={11} /> Changes aren&apos;t saving right now
+        </div>
+      )}
+
+      {dailyToastVisible && (
+        <div role="status" aria-live="polite" className="fixed mobile-toast right-4 chip z-40 fade-in" style={{ color: "var(--accent)", background: "var(--surface)" }}>
+          <Flame size={11} /> +1 Daily tracking
         </div>
       )}
 
