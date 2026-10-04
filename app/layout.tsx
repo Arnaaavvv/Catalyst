@@ -1,9 +1,17 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Catalyst",
   description: "A personal operating system for health, habits, goals, tasks, and academics.",
+};
+
+// Android Chrome: shrink the layout (not just the visual viewport) when the
+// keyboard opens, so bottom sheets sit above it. iOS ignores this; see useKeyboardFit.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -57,7 +57,7 @@ export default function TodayView({ state, actions }: { state: LifeOSState; acti
           <Sparkles size={18} style={{ color: "var(--accent)" }} className="mb-3" />
           <h2 className="font-display text-xl mb-2">This is your blank slate</h2>
           <p className="text-sm text-dim leading-relaxed mb-5">
-            Add your own tasks, habits, goals, and health logs with <span className="kbd">Ctrl + K</span> or,
+            Add your own tasks, habits, goals, and health logs with <span className="md:hidden">the + button</span><span className="hidden md:inline"><span className="kbd">Ctrl + K</span></span> or,
             if you'd rather see the app fully populated first, load the example template below. It's a
             complete, clearly-separate dataset you can clear at any time; it won't merge with anything you add yourself.
           </p>
@@ -75,7 +75,7 @@ export default function TodayView({ state, actions }: { state: LifeOSState; acti
                 sample data to explore the app. Clear it whenever you&apos;re ready to track your own.
               </p>
               <button onClick={() => setClearConfirmOpen(true)}
-                className="text-xs px-3 py-1.5 rounded-lg hairline border flex-shrink-0">
+                className="text-xs px-3 py-1.5 max-md:py-2.5 rounded-lg hairline border flex-shrink-0">
                 Clear example data
               </button>
             </div>
@@ -93,15 +93,17 @@ export default function TodayView({ state, actions }: { state: LifeOSState; acti
                 <span className="text-xs text-dim">{doneToday} done{overdue ? ` · ${overdue} overdue` : ""}</span>
               </div>
               {todaysTasks.length === 0 ? (
-                <EmptyState icon={CheckSquare} title="Nothing on deck" hint="Add a task with Ctrl + K, or enjoy the clear day." />
+                <EmptyState icon={CheckSquare} title="Nothing on deck" hint={<>Add a task with <span className="md:hidden">the + button</span><span className="hidden md:inline">Ctrl + K</span>, or enjoy the clear day.</>} />
               ) : (
                 <div className="space-y-0.5">
                   {todaysTasks.map((t) => (
-                    <div key={t.id} className="row-hover flex items-center gap-2.5 px-2 py-2 rounded-lg">
+                    <div key={t.id} className="row-hover flex flex-wrap md:flex-nowrap items-center gap-x-2.5 gap-y-1 px-2 py-2.5 md:py-2 rounded-lg">
                       <TaskCheck done={t.done} onClick={() => actions.toggleTask(t.id)} />
                       <span className={`text-sm flex-1 min-w-0 ${t.done ? "line-through text-faint" : ""}`}>{t.title}</span>
-                      {t.due && t.due < today && !t.done && <span className="chip" style={{ color: "var(--tasks)", borderColor: "var(--tasks)" }}>overdue</span>}
-                      <span className="chip text-faint">{t.project}</span>
+                      <div className="order-last basis-full pl-[calc(var(--check)_+_10px)] md:order-none md:basis-auto md:pl-0 flex items-center gap-2.5">
+                        {t.due && t.due < today && !t.done && <span className="chip" style={{ color: "var(--tasks)", borderColor: "var(--tasks)" }}>overdue</span>}
+                        <span className="chip text-faint">{t.project}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -126,7 +128,7 @@ export default function TodayView({ state, actions }: { state: LifeOSState; acti
                               actions.logHabit(h.id, today);
                             }
                           }}
-                          className="row-hover flex items-center gap-2 px-2.5 py-2 rounded-lg text-left cursor-pointer"
+                          className="row-hover flex items-center gap-2 px-2.5 py-2.5 md:py-2 rounded-lg text-left cursor-pointer"
                         >
                           <TaskCheck done={!!done} onClick={() => actions.logHabit(h.id, today)} />
                           <span className="text-xs flex-1">{h.name}</span>

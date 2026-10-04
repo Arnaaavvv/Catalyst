@@ -7,6 +7,7 @@ import Portal from "@/components/shared/Portal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import type { LifeOSState, Priority, Task } from "@/lib/types";
 import type { LifeOSActions } from "@/hooks/useLifeOSStore";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { CheckSquare } from "lucide-react";
 
 const TASK_FILTERS = [
@@ -23,7 +24,14 @@ export default function TasksView({ state, actions }: { state: LifeOSState; acti
   const [newTitle, setNewTitle] = useState("");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const compact = useMediaQuery("(max-width: 767px)");
   const today = todayISO();
+
+  function addNew() {
+    if (!newTitle.trim()) return;
+    actions.addTask(newTitle, filter === "upcoming" ? isoOf(2) : today);
+    setNewTitle("");
+  }
 
   const filtered = state.tasks.filter((t) => {
     if (filter === "today") return t.due === today || (t.due && t.due < today && !t.done);
@@ -37,9 +45,9 @@ export default function TasksView({ state, actions }: { state: LifeOSState; acti
       <SectionHeader eyebrow="INBOX · PROJECTS · PRIORITIES" title="Tasks" />
 
       <div className="flex items-center gap-2 mb-4">
-        <div className="flex gap-1 surface-2 p-1 rounded-lg">
+        <div className="flex flex-1 md:flex-none gap-1 surface-2 p-1 rounded-lg">
           {TASK_FILTERS.map((f) => (
-            <button key={f.id} onClick={() => setFilter(f.id)} className="text-xs px-3 py-1.5 rounded-md font-medium"
+            <button key={f.id} onClick={() => setFilter(f.id)} className="flex-1 md:flex-none text-xs px-3 py-2.5 md:py-1.5 rounded-md font-medium"
               style={{ background: filter === f.id ? "var(--surface)" : "transparent", color: filter === f.id ? "var(--ink)" : "var(--ink-dim)" }}>
               {f.label}
             </button>
@@ -47,19 +55,23 @@ export default function TasksView({ state, actions }: { state: LifeOSState; acti
         </div>
       </div>
 
-      <div className="surface rounded-xl p-4 mb-4">
+      <div className="surface rounded-xl p-3 md:p-4 mb-4">
         <div className="flex items-center gap-2">
-          <Plus size={14} className="text-faint" />
+          <Plus size={14} className="text-faint flex-shrink-0 ml-1 md:ml-0" />
           <input value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && newTitle.trim()) { actions.addTask(newTitle, filter === "upcoming" ? isoOf(2) : today); setNewTitle(""); } }}
-            placeholder="Add a task and press Enter…" className="flex-1 bg-transparent text-sm" style={{ border: "none" }} />
+            onKeyDown={(e) => { if (e.key === "Enter") addNew(); }}
+            enterKeyHint="done"
+            placeholder={compact ? "Add a task…" : "Add a task and press Enter…"} className="flex-1 min-w-0 bg-transparent text-sm max-md:py-2" style={{ border: "none" }} />
+          {newTitle.trim() && (
+            <button onClick={addNew} className="md:hidden btn-primary text-xs px-4 py-2.5 rounded-lg flex-shrink-0">Add</button>
+          )}
         </div>
       </div>
 
       {filtered.length === 0 ? (
         <EmptyState icon={CheckSquare} title="All clear" hint="Nothing here right now." />
       ) : (
-        <div className="space-y-0.5">
+        <div>
           {filtered.map((t) => {
             const isOpen = expanded[t.id];
             return (
@@ -70,18 +82,19 @@ export default function TasksView({ state, actions }: { state: LifeOSState; acti
                     <div className={`text-sm ${t.done ? "line-through text-faint" : ""}`}>{t.title}</div>
                   </div>
                   {/* On a phone the metadata drops to its own line under the title (29px = checkbox + gap); from md up it sits inline as before. */}
-                  <div className="order-last basis-full pl-[29px] md:order-none md:basis-auto md:pl-0 flex items-center gap-2.5">
+                  <div className="order-last basis-full pl-[calc(var(--check)_+_10px)] md:order-none md:basis-auto md:pl-0 flex items-center gap-2.5">
                     <span className="dot" style={{ background: PRIORITY_COLOR[t.priority] }} title={t.priority} />
                     {t.due && <span className="font-mono text-[10px] text-faint md:w-14 md:text-right">{fmtShort(t.due)}</span>}
                     <span className="chip text-faint">{t.project}</span>
                     {t.recurring && <Repeat size={11} className="text-faint" />}
                   </div>
                   {t.subtasks.length > 0 && (
-                    <button onClick={() => setExpanded((s) => ({ ...s, [t.id]: !isOpen }))} className="text-faint">
+                    <button onClick={() => setExpanded((s) => ({ ...s, [t.id]: !isOpen }))} className="icon-btn text-faint"
+                      aria-label={isOpen ? "Hide subtasks" : "Show subtasks"} aria-expanded={!!isOpen}>
                       <ChevronDown size={13} style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform .15s" }} />
                     </button>
                   )}
-                  <button onClick={() => setEditingTask(t)} className="text-faint hover:text-ink p-1 flex-shrink-0" aria-label="Edit task">
+                  <button onClick={() => setEditingTask(t)} className="icon-btn text-faint hover:text-ink p-1" aria-label="Edit task">
                     <Pencil size={13} />
                   </button>
                 </div>
@@ -119,7 +132,7 @@ function EditTaskModal({ task, actions, onClose }: { task: Task; actions: LifeOS
         <div className="modal-panel surface rounded-2xl p-5 w-full max-w-[420px]" onMouseDown={(e) => e.stopPropagation()} style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}>
           <div className="flex items-center justify-between mb-4">
             <span className="font-display text-lg">Edit task</span>
-            <button onClick={onClose}><X size={16} className="text-faint" /></button>
+            <button onClick={onClose} className="icon-btn -mr-1" aria-label="Close"><X size={16} className="text-faint" /></button>
           </div>
           <div className="space-y-3">
             <div>

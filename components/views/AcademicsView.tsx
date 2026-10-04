@@ -68,11 +68,11 @@ export default function AcademicsView({ state, actions }: { state: LifeOSState; 
                     {state.subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
                   <div className="flex gap-2">
-                    <button onClick={() => setRunning((r) => !r)} className="btn-primary flex-1 py-2 rounded-lg text-xs flex items-center justify-center gap-1.5">
+                    <button onClick={() => setRunning((r) => !r)} className="btn-primary flex-1 py-2 max-md:py-3 rounded-lg text-xs flex items-center justify-center gap-1.5">
                       {running ? <Pause size={12} /> : <Play size={12} />} {running ? "Pause" : "Start"}
                     </button>
                     {timerSeconds > 0 && (
-                      <button onClick={finishSession} className="flex-1 py-2 rounded-lg text-xs hairline border flex items-center justify-center gap-1.5">
+                      <button onClick={finishSession} className="flex-1 py-2 max-md:py-3 rounded-lg text-xs hairline border flex items-center justify-center gap-1.5">
                         <Square size={11} /> Log
                       </button>
                     )}
@@ -93,7 +93,7 @@ export default function AcademicsView({ state, actions }: { state: LifeOSState; 
                         <div className="h-full rounded-full" style={{ width: `${Math.min(100, mins / 2)}%`, background: "var(--academics)" }} />
                       </div>
                       <span className="font-mono text-[10px] text-faint w-10 text-right">{mins}m</span>
-                      <button onClick={() => setEditingSubject(s)} className="text-faint hover:text-ink p-0.5 flex-shrink-0" aria-label="Edit subject">
+                      <button onClick={() => setEditingSubject(s)} className="icon-btn text-faint hover:text-ink p-0.5" aria-label="Edit subject">
                         <Pencil size={12} />
                       </button>
                     </div>
@@ -107,7 +107,7 @@ export default function AcademicsView({ state, actions }: { state: LifeOSState; 
             <div className="surface rounded-xl p-4 min-w-0">
               <div className="font-mono text-[10px] text-faint tracking-wide mb-3">ASSIGNMENTS & EXAMS</div>
               {state.assignments.length === 0 ? (
-                <div className="text-xs text-dim py-4">No assignments tracked yet. Add one with Ctrl + K.</div>
+                <div className="text-xs text-dim py-4">No assignments tracked yet. Add one with <span className="md:hidden">the + button</span><span className="hidden md:inline">Ctrl + K</span>.</div>
               ) : (
                 <div className="space-y-0.5">
                   {[...state.assignments].sort((a, b) => (a.due < b.due ? -1 : 1)).map((a) => {
@@ -121,7 +121,7 @@ export default function AcademicsView({ state, actions }: { state: LifeOSState; 
                         </div>
                         {a.grade && <span className="chip" style={{ color: "var(--academics)", borderColor: "var(--academics)" }}>{a.grade}</span>}
                         <span className="font-mono text-[10px] text-faint w-14 text-right">{fmtShort(a.due)}</span>
-                        <button onClick={() => setEditingAssignment(a)} className="text-faint hover:text-ink p-1 flex-shrink-0" aria-label="Edit assignment">
+                        <button onClick={() => setEditingAssignment(a)} className="icon-btn text-faint hover:text-ink p-1" aria-label="Edit assignment">
                           <Pencil size={12} />
                         </button>
                       </div>
@@ -145,7 +145,7 @@ export default function AcademicsView({ state, actions }: { state: LifeOSState; 
                           <div className="flex justify-between"><span className="font-medium">{s.topic}</span><span className="font-mono text-faint">{s.duration}m</span></div>
                           <div className="text-faint">{sub?.name} · {fmtShort(s.date)}</div>
                         </div>
-                        <button onClick={() => setEditingSession(s)} className="text-faint hover:text-ink p-1 flex-shrink-0" aria-label="Edit study session">
+                        <button onClick={() => setEditingSession(s)} className="icon-btn text-faint hover:text-ink p-1" aria-label="Edit study session">
                           <Pencil size={12} />
                         </button>
                       </div>
@@ -183,7 +183,7 @@ function SubjectModal({ actions, onClose, existing }: { actions: LifeOSActions; 
         <div className="modal-panel surface rounded-2xl p-5 w-full max-w-[380px]" onMouseDown={(e) => e.stopPropagation()} style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}>
           <div className="flex items-center justify-between mb-4">
             <span className="font-display text-lg">{existing ? "Edit subject" : "New subject"}</span>
-            <button onClick={onClose}><X size={16} className="text-faint" /></button>
+            <button onClick={onClose} className="icon-btn -mr-1" aria-label="Close"><X size={16} className="text-faint" /></button>
           </div>
           <FieldLabel>Name</FieldLabel>
           <input autoFocus className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Organic Chemistry" />
@@ -226,7 +226,7 @@ function AssignmentModal({
     <Portal>
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4 modal-backdrop" style={{ background: "rgba(20,18,12,0.5)" }} onMouseDown={onClose}>
         <div className="modal-panel surface rounded-2xl p-5 w-full max-w-[400px]" onMouseDown={(e) => e.stopPropagation()} style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}>
-          <div className="flex items-center justify-between mb-4"><span className="font-display text-lg">Edit assignment</span><button onClick={onClose}><X size={16} className="text-faint" /></button></div>
+          <div className="flex items-center justify-between mb-4"><span className="font-display text-lg">Edit assignment</span><button onClick={onClose} className="icon-btn -mr-1" aria-label="Close"><X size={16} className="text-faint" /></button></div>
           <div className="space-y-3">
             <div>
               <FieldLabel>Title</FieldLabel>
@@ -299,7 +299,7 @@ function StudySessionModal({
     <Portal>
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4 modal-backdrop" style={{ background: "rgba(20,18,12,0.5)" }} onMouseDown={onClose}>
         <div className="modal-panel surface rounded-2xl p-5 w-full max-w-[400px]" onMouseDown={(e) => e.stopPropagation()} style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}>
-          <div className="flex items-center justify-between mb-4"><span className="font-display text-lg">Edit study session</span><button onClick={onClose}><X size={16} className="text-faint" /></button></div>
+          <div className="flex items-center justify-between mb-4"><span className="font-display text-lg">Edit study session</span><button onClick={onClose} className="icon-btn -mr-1" aria-label="Close"><X size={16} className="text-faint" /></button></div>
           <div className="space-y-3">
             <div>
               <FieldLabel>Subject</FieldLabel>

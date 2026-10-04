@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { AlertCircle, Flame, Plus } from "lucide-react";
 import { getSessionUser, logOut, onAuthChange, type PublicUser } from "@/lib/auth";
 import { useLifeOSStore } from "@/hooks/useLifeOSStore";
+import { useKeyboardFit } from "@/hooks/useKeyboardFit";
 import { trackedDates } from "@/lib/derived";
 import { todayISO } from "@/lib/date";
 import AuthScreen from "@/components/auth/AuthScreen";
@@ -30,6 +31,7 @@ export default function App() {
   const [view, setView] = useState("today");
   const [dark, setDark] = useState(true);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  useKeyboardFit();
 
   // getSession() gives us the current session immediately on mount (it reads
   // from Supabase's own local storage, no network round-trip needed); the
@@ -94,7 +96,7 @@ export default function App() {
 
   if (user === undefined) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-dvh flex items-center justify-center">
         <Loading label="Checking session" />
       </div>
     );
@@ -162,7 +164,7 @@ function AuthedApp({
   // "Try again" button) could never be reached, leaving a permanent spinner.
   if (status === "error") {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="min-h-dvh flex items-center justify-center px-4">
         <div className="surface rounded-2xl p-6 max-w-sm text-center">
           <AlertCircle size={18} style={{ color: "var(--tasks)" }} className="mx-auto mb-3" />
           <h2 className="font-display text-lg mb-2">Couldn&apos;t load your data</h2>
@@ -174,7 +176,7 @@ function AuthedApp({
   }
 
   if (status === "loading" || !state) {
-    return <div className="min-h-screen flex items-center justify-center"><Loading label="Loading your data" /></div>;
+    return <div className="min-h-dvh flex items-center justify-center"><Loading label="Loading your data" /></div>;
   }
 
 

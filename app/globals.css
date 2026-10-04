@@ -21,6 +21,7 @@
   --tasks: #A63D2F;
   --academics: #386B4E;
   --tabbar-h: 56px;
+  --check: 19px; /* checkbox size; grows on touch screens, and indented rows key off it */
   color-scheme: light;
 }
 
@@ -94,7 +95,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .row-hover:active { background: var(--surface-2); }
 
 .task-check {
-  width: 19px; height: 19px; border-radius: 6px; border: 1.5px solid var(--line-strong);
+  width: var(--check); height: var(--check); border-radius: 6px; border: 1.5px solid var(--line-strong);
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   transition: all 0.15s ease; cursor: pointer; background: var(--surface);
 }
@@ -144,7 +145,8 @@ input::placeholder, textarea::placeholder { color: var(--ink-faint); }
    tab bar, so those offsets fall back to their original values at md+. */
 .app-content { padding-bottom: calc(var(--tabbar-h) + 84px + env(safe-area-inset-bottom, 0px)); }
 .mobile-fab { bottom: calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom, 0px)); }
-.mobile-toast { bottom: calc(var(--tabbar-h) + 12px + env(safe-area-inset-bottom, 0px)); }
+/* 84px = FAB (52) + its 16px offset + a gap, so toasts sit above it instead of on it. */
+.mobile-toast { bottom: calc(var(--tabbar-h) + 84px + env(safe-area-inset-bottom, 0px)); }
 @media (min-width: 768px) {
   .app-content { padding-bottom: 1.5rem; }
   .mobile-toast { bottom: 1rem; }
@@ -154,18 +156,60 @@ input::placeholder, textarea::placeholder { color: var(--ink-faint); }
   /* iOS Safari zooms the page when an input under 16px gets focus. !important
      because the inputs carry Tailwind text-sm, which would otherwise win. */
   input, textarea, select { font-size: 16px !important; }
+  select { min-height: 42px; }
 
   /* iOS renders date inputs with their own intrinsic width and no minimum
      height, so they overflow grid columns and collapse when empty. */
-  input[type="date"] { min-width: 0; min-height: 38px; -webkit-appearance: none; appearance: none; text-align: left; }
+  input[type="date"] { min-width: 0; min-height: 42px; -webkit-appearance: none; appearance: none; text-align: left; }
   input[type="date"]::-webkit-date-and-time-value { text-align: left; }
 }
 
-/* Fingers are less precise than cursors: grow the checkbox's tap area
-   without changing how big it looks or how anything is laid out. */
+/* Icon-only buttons (edit, delete, close). On a mouse they stay as small as
+   they look; on touch they get a real 40px box. The negative block margin
+   hands the extra height back to the layout, so rows keep their rhythm. */
+.icon-btn { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+/* Fingers are less precise than cursors. */
 @media (pointer: coarse) {
+  :root { --check: 22px; }
   .task-check { position: relative; }
-  .task-check::after { content: ''; position: absolute; inset: -8px; }
+  .task-check::after { content: ''; position: absolute; inset: -10px; }
+  .icon-btn { min-width: 40px; min-height: 40px; margin-block: -8px; }
+}
+
+/* Drops the grey tap flash (the :active states already give feedback) and the
+   double-tap-to-zoom delay on anything tappable. */
+button, [role="button"], a, select, summary {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* On a phone every dialog becomes a bottom sheet: it opens where the thumb is.
+   --vv-top / --vv-bottom (set by useKeyboardFit only while the keyboard is up)
+   shrink the overlay to the visible area, so the sheet rides above the keyboard
+   instead of hiding behind it. Unset they are 0, i.e. the usual inset-0. */
+@media (max-width: 767px) {
+  .modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+    top: var(--vv-top, 0px);
+    bottom: var(--vv-bottom, 0px);
+    overscroll-behavior: contain;
+  }
+  .modal-panel {
+    max-width: none;
+    border-radius: 20px 20px 0 0;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+    animation: sheetIn 0.25s cubic-bezier(.2,.8,.2,1);
+    overscroll-behavior: contain;
+    /* !important: CommandPalette sets its max-height inline, and a sheet's shadow has to fall upward. */
+    max-height: calc(100% - 0.75rem) !important;
+    box-shadow: 0 -12px 40px rgba(0,0,0,0.25) !important;
+  }
+
+  /* Typing in an inline field (a dialog's own backdrop already covers them)
+     shouldn't leave a tab bar and a FAB floating above the keyboard. */
+  body:has(input:focus, textarea:focus) :is(nav[aria-label="Sections"], .mobile-fab) { display: none; }
 }
 
 /* Printable report (components/account/ReportView.tsx). The report renders

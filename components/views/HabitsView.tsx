@@ -58,17 +58,20 @@ export default function HabitsView({ state, actions }: { state: LifeOSState; act
                 <div key={h.id} className="surface rounded-xl p-4">
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-3">
                     <TaskCheck done={!!doneToday} onClick={() => actions.logHabit(h.id, todayISO())} />
-                    <div className="min-w-[6.5rem] flex-1">
+                    <div className="min-w-0 md:min-w-[6.5rem] flex-1">
                       <div className="text-sm font-medium">{h.name}</div>
-                      <div className="font-mono text-[10px] text-faint mt-0.5">
+                      {/* One line on a phone: a linked goal's full title used to stretch this to four. */}
+                      <div className="font-mono text-[10px] text-faint mt-0.5 truncate md:whitespace-normal md:overflow-visible md:text-clip">
                         target {h.target} {h.unit} {linkedGoal && <>· <Link2 size={9} className="inline mb-0.5" /> {linkedGoal.title}</>}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 font-mono text-xs" style={{ color: DOMAINS.habits.color }}>
-                      <Flame size={13} /> {streak}
+                    <div className="order-last basis-full pl-[calc(var(--check)_+_12px)] md:order-none md:basis-auto md:pl-0 flex items-center gap-3">
+                      <div className="flex items-center gap-1 font-mono text-xs" style={{ color: DOMAINS.habits.color }}>
+                        <Flame size={13} /> {streak}
+                      </div>
+                      <span className="chip" style={{ color: hm.state === "stalled" ? "var(--tasks)" : "var(--ink-dim)" }}>{MOMENTUM_META[hm.state].label}</span>
                     </div>
-                    <span className="chip" style={{ color: hm.state === "stalled" ? "var(--tasks)" : "var(--ink-dim)" }}>{MOMENTUM_META[hm.state].label}</span>
-                    <button onClick={() => setEditingHabit(h)} className="text-faint hover:text-ink p-1" aria-label="Edit habit">
+                    <button onClick={() => setEditingHabit(h)} className="icon-btn text-faint hover:text-ink p-1" aria-label="Edit habit">
                       <Pencil size={13} />
                     </button>
                   </div>
@@ -111,7 +114,7 @@ function HabitModal({
       <div className="modal-panel surface rounded-2xl p-5 w-full max-w-[400px]" onMouseDown={(e) => e.stopPropagation()} style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}>
         <div className="flex items-center justify-between mb-4">
           <span className="font-display text-lg">{existing ? "Edit habit" : "New habit"}</span>
-          <button onClick={onClose}><X size={16} className="text-faint" /></button>
+          <button onClick={onClose} className="icon-btn -mr-1" aria-label="Close"><X size={16} className="text-faint" /></button>
         </div>
         <div className="space-y-3">
           <div>

@@ -66,14 +66,14 @@ export default function AccountPage({
   return (
     <Portal>
       <div className="fixed inset-0 z-50 overflow-y-auto scrollbar-thin" style={{ background: "var(--bg)" }}>
-        <div className="max-w-[720px] mx-auto px-5 py-8 fade-in">
-          <div className="flex items-center justify-between gap-3 mb-8">
+        <div className="max-w-[720px] mx-auto px-5 pb-8 pt-2 md:py-8 fade-in">
+          <div className="flex items-center justify-between gap-3 mb-8 max-md:sticky max-md:top-0 max-md:z-10 max-md:-mx-5 max-md:px-5 max-md:py-3 max-md:mb-5" style={{ background: "var(--bg)" }}>
             <h1 className="font-display text-xl sm:text-2xl">Manage account</h1>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <button onClick={() => setReportOpen(true)} className="text-xs px-3 py-2 rounded-lg hairline border flex items-center gap-1.5">
+              <button onClick={() => setReportOpen(true)} className="text-xs px-3 py-2 max-md:py-2.5 rounded-lg hairline border flex items-center gap-1.5">
                 <Download size={13} /> <span className="hidden sm:inline">Download profile/stats</span><span className="sm:hidden">Download</span>
               </button>
-              <button onClick={onClose} className="p-2 rounded-lg row-hover" aria-label="Close">
+              <button onClick={onClose} className="icon-btn p-2 rounded-lg row-hover" aria-label="Close">
                 <X size={18} />
               </button>
             </div>

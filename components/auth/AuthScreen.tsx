@@ -42,7 +42,7 @@ export default function AuthScreen({ onAuthed }: { onAuthed: (user: PublicUser) 
 
   if (confirmationSentTo) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="min-h-dvh flex items-center justify-center px-4">
         <div className="w-full max-w-[380px] text-center">
           <div className="surface rounded-2xl p-6">
             <Mail size={20} style={{ color: "var(--accent)" }} className="mx-auto mb-3" />
@@ -64,7 +64,7 @@ export default function AuthScreen({ onAuthed }: { onAuthed: (user: PublicUser) 
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-dvh flex items-center justify-center px-4">
       <div className="w-full max-w-[380px]">
         <div className="flex items-center gap-2 mb-8 justify-center">
           <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ background: "var(--accent)" }}>
@@ -76,12 +76,12 @@ export default function AuthScreen({ onAuthed }: { onAuthed: (user: PublicUser) 
         <div className="surface rounded-2xl p-6">
           <div className="flex gap-1 surface-2 p-1 rounded-lg mb-5">
             <button type="button" onClick={() => { setMode("signup"); setError(null); }}
-              className="flex-1 text-xs py-1.5 rounded-md font-medium"
+              className="flex-1 text-xs py-1.5 max-md:py-2.5 rounded-md font-medium"
               style={{ background: mode === "signup" ? "var(--surface)" : "transparent", color: mode === "signup" ? "var(--ink)" : "var(--ink-dim)" }}>
               Sign up
             </button>
             <button type="button" onClick={() => { setMode("login"); setError(null); }}
-              className="flex-1 text-xs py-1.5 rounded-md font-medium"
+              className="flex-1 text-xs py-1.5 max-md:py-2.5 rounded-md font-medium"
               style={{ background: mode === "login" ? "var(--surface)" : "transparent", color: mode === "login" ? "var(--ink)" : "var(--ink-dim)" }}>
               Log in
             </button>
@@ -91,16 +91,16 @@ export default function AuthScreen({ onAuthed }: { onAuthed: (user: PublicUser) 
             {mode === "signup" && (
               <div>
                 <FieldLabel>Name</FieldLabel>
-                <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" required />
+                <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" autoComplete="name" required />
               </div>
             )}
             <div>
               <FieldLabel>Email</FieldLabel>
-              <input type="email" className={inputCls} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
+              <input type="email" className={inputCls} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" autoCapitalize="none" spellCheck={false} required />
             </div>
             <div>
               <FieldLabel>Password</FieldLabel>
-              <input type="password" className={inputCls} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" required minLength={6} />
+              <input type="password" className={inputCls} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" autoComplete={mode === "signup" ? "new-password" : "current-password"} required minLength={6} />
             </div>
 
             {error && <div className="text-xs" style={{ color: "var(--tasks)" }}>{error}</div>}

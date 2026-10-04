@@ -93,18 +93,19 @@ export default function CommandPalette({
                 value={nlText}
                 onChange={(e) => setNlText(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleNLSubmit()}
-                placeholder='Try "Study physics for 45 minutes tomorrow"'
+                enterKeyHint="go"
+                placeholder='Try "Read 20 min tomorrow"'
                 className="flex-1 bg-transparent text-sm py-1"
                 style={{ border: "none" }}
               />
               {nlText.trim() && (
                 <button onClick={handleNLSubmit} disabled={parsing}
-                  className="btn-primary text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1">
+                  className="btn-primary text-xs px-2.5 py-1.5 max-md:py-2.5 rounded-lg flex items-center gap-1">
                   {parsing ? <Loader2 size={12} className="spin" /> : <ArrowRight size={12} />}
                   Parse
                 </button>
               )}
-              <button onClick={onClose} className="p-1 text-faint hover:text-ink"><X size={16} /></button>
+              <button onClick={onClose} className="icon-btn -mr-1 p-1 text-faint hover:text-ink" aria-label="Close"><X size={16} /></button>
             </div>
             {parseError && (
               <div className="px-4 py-2 text-xs flex items-center gap-1.5" style={{ color: "var(--tasks)" }}>
@@ -154,7 +155,7 @@ function QuickForm({
   return (
     <div className="p-4">
       <div className="flex items-center gap-2 mb-4">
-        <button onClick={onBack} className="text-faint hover:text-ink"><ChevronRight size={14} className="rotate-180" /></button>
+        <button onClick={onBack} className="icon-btn -ml-2 text-faint hover:text-ink" aria-label="Back"><ChevronRight size={14} className="rotate-180" /></button>
         <type.icon size={14} style={{ color: DOMAINS[type.domain].color }} />
         <span className="text-sm font-medium">{type.label}</span>
       </div>

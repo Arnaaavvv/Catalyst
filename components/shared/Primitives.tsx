@@ -13,17 +13,19 @@ export function SectionHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-end justify-between mb-6 flex-wrap gap-3">
-      <div>
-        {eyebrow && <div className="font-mono text-[11px] text-faint mb-1 tracking-wide">{eyebrow}</div>}
+    <div className="mb-6">
+      {eyebrow && <div className="font-mono text-[11px] text-faint mb-1 tracking-wide">{eyebrow}</div>}
+      {/* md:items-end + fixed h-7 reproduces the original desktop geometry: the action hugs the title's baseline. */}
+      <div className="flex items-center md:items-end justify-between gap-3 md:h-7">
         <h1 className="font-display text-[28px] leading-none" style={{ fontWeight: 500 }}>{title}</h1>
+        {/* Header actions are plain buttons; give them a thumb-sized height on phones. */}
+        {action && <div className="flex-shrink-0 max-md:[&>button]:py-3">{action}</div>}
       </div>
-      {action}
     </div>
   );
 }
 
-export function EmptyState({ icon: Icon, title, hint }: { icon: LucideIcon; title: string; hint?: string }) {
+export function EmptyState({ icon: Icon, title, hint }: { icon: LucideIcon; title: string; hint?: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center text-center py-16 px-6 border border-dashed hairline rounded-xl">
       <Icon size={22} className="text-faint mb-3" />
@@ -73,7 +75,7 @@ export function MiniStat({ icon: Icon, label, value, color }: { icon: LucideIcon
   );
 }
 
-export const inputCls = "w-full rounded-lg px-2.5 py-2 text-sm";
+export const inputCls = "w-full rounded-lg px-2.5 py-2 max-md:py-2.5 text-sm";
 
 export function FieldLabel({ children }: { children: React.ReactNode }) {
   return <label className="block font-mono text-[10px] text-faint mb-1.5 tracking-wide">{children}</label>;

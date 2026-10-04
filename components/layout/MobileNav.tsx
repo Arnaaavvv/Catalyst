@@ -17,7 +17,7 @@ const secondary = NAV_ITEMS.filter((i) => !PRIMARY_IDS.includes(i.id));
 function Tab({ icon: Icon, label, active, onClick }: { icon: LucideIcon; label: string; active: boolean; onClick: () => void }) {
   return (
     <button onClick={onClick} aria-current={active ? "page" : undefined}
-      className="relative flex-1 flex flex-col items-center justify-center gap-1 text-[10px]"
+      className="relative flex-1 flex flex-col items-center justify-center gap-1 text-[11px]"
       style={{ color: active ? "var(--accent)" : "var(--ink-dim)", fontWeight: active ? 600 : 400 }}>
       {active && <span className="absolute top-0 h-[2px] w-8 rounded-b" style={{ background: "var(--accent)" }} />}
       <Icon size={18} />
@@ -85,7 +85,7 @@ export default function MobileNav({
                     <div className="text-xs font-medium truncate">{user.username || user.name}</div>
                     <div className="text-[10px] text-faint truncate">{user.email}</div>
                   </div>
-                  <button onClick={() => setMoreOpen(false)} className="p-2 -mr-2 text-faint" aria-label="Close"><X size={16} /></button>
+                  <button onClick={() => setMoreOpen(false)} className="icon-btn -mr-2 text-faint" aria-label="Close"><X size={16} /></button>
                 </div>
                 <SheetAction icon={UserCog} label="Manage account" onClick={() => openDialog("account")} />
                 <SheetAction icon={dark ? Sun : Moon} label={dark ? "Light mode" : "Dark mode"} onClick={() => setDark((d) => !d)} />

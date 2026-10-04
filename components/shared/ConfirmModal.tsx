@@ -20,7 +20,7 @@ export default function ConfirmModal({
               <AlertTriangle size={16} style={{ color: "var(--tasks)" }} />
               <span className="font-display text-lg">{title}</span>
             </div>
-            <button onClick={onCancel}><X size={16} className="text-faint" /></button>
+            <button onClick={onCancel} className="icon-btn -mr-1" aria-label="Close"><X size={16} className="text-faint" /></button>
           </div>
           <p className="text-sm text-dim leading-relaxed mb-5">{message}</p>
           <div className="flex gap-2">

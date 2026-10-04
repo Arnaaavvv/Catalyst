@@ -143,7 +143,7 @@ export default function GoalsView({ state, actions }: { state: LifeOSState; acti
         <>
           <div className="surface rounded-xl p-4 mb-5">
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 mb-2">
-              <div className="font-mono text-[10px] text-faint tracking-wide">RELATIONSHIP MAP · click a goal</div>
+              <div className="font-mono text-[10px] text-faint tracking-wide">RELATIONSHIP MAP · <span className="md:hidden">tap</span><span className="hidden md:inline">click</span> a goal</div>
               <div className="flex items-center gap-3 text-[10px] font-mono text-faint">
                 <span className="flex items-center gap-1"><span className="dot" style={{ background: "var(--goals)" }} /> goal</span>
                 <span className="flex items-center gap-1"><span className="dot" style={{ background: "var(--habits)" }} /> habit</span>
@@ -159,7 +159,7 @@ export default function GoalsView({ state, actions }: { state: LifeOSState; acti
                 <div className="flex items-start justify-between mb-1">
                   <h3 className="font-display text-xl" style={{ maxWidth: 280 }}>{goal.title}</h3>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <button onClick={() => setEditingGoal(goal)} className="text-faint hover:text-ink p-1" aria-label="Edit goal">
+                    <button onClick={() => setEditingGoal(goal)} className="icon-btn text-faint hover:text-ink p-1" aria-label="Edit goal">
                       <Pencil size={14} />
                     </button>
                     <MomentumDial state={mom.state} color="var(--goals)" size={48} />
@@ -172,7 +172,7 @@ export default function GoalsView({ state, actions }: { state: LifeOSState; acti
                       <TaskCheck done={m.done} onClick={() => actions.toggleMilestone(goal.id, m.id)} />
                       <span className={`text-sm flex-1 min-w-0 ${m.done ? "line-through text-faint" : ""}`}>{m.title}</span>
                       <span className="font-mono text-[10px] text-faint">{fmtShort(m.date)}</span>
-                      <button onClick={() => actions.deleteMilestone(goal.id, m.id)} className="text-faint hover:text-ink p-0.5" aria-label="Delete milestone">
+                      <button onClick={() => actions.deleteMilestone(goal.id, m.id)} className="icon-btn text-faint hover:text-ink p-0.5" aria-label="Delete milestone">
                         <X size={12} />
                       </button>
                     </div>
@@ -221,23 +221,28 @@ function AddMilestoneRow({ goalId, actions }: { goalId: string; actions: LifeOSA
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="row-hover w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left text-xs text-dim mt-1">
+      <button onClick={() => setOpen(true)} className="row-hover w-full flex items-center gap-2 px-2 py-2 max-md:py-3 rounded-lg text-left text-xs text-dim mt-1">
         <Plus size={12} /> Add milestone
       </button>
     );
   }
   return (
-    <div className="flex items-center gap-2 mt-1 px-2">
-      <input
-        autoFocus
-        className={inputCls}
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        onKeyDown={(e) => { if (e.key === "Enter") submit(); if (e.key === "Escape") setOpen(false); }}
-        placeholder="Milestone title"
-      />
-      <input type="date" className={inputCls} style={{ width: 130 }} value={date} onChange={(e) => setDate(e.target.value)} />
-      <button onClick={submit} className="btn-primary text-xs px-2.5 py-2 rounded-lg flex-shrink-0" aria-label="Add milestone">
+    <div className="flex flex-wrap md:flex-nowrap items-center gap-2 mt-1 px-2">
+      <div className="basis-full md:basis-0 md:flex-1 min-w-0">
+        <input
+          autoFocus
+          className={inputCls}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") submit(); if (e.key === "Escape") setOpen(false); }}
+          enterKeyHint="done"
+          placeholder="Milestone title"
+        />
+      </div>
+      <div className="flex-1 md:flex-none md:w-[130px] min-w-0">
+        <input type="date" className={inputCls} value={date} onChange={(e) => setDate(e.target.value)} />
+      </div>
+      <button onClick={submit} className="btn-primary text-xs px-2.5 py-2 max-md:px-4 max-md:py-2.5 rounded-lg flex-shrink-0" aria-label="Add milestone">
         <Plus size={13} />
       </button>
     </div>
@@ -260,7 +265,7 @@ function GoalModal({ actions, onClose, existing }: { actions: LifeOSActions; onC
     <Portal>
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4 modal-backdrop" style={{ background: "rgba(20,18,12,0.5)" }} onMouseDown={onClose}>
         <div className="modal-panel surface rounded-2xl p-5 w-full max-w-[400px]" onMouseDown={(e) => e.stopPropagation()} style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}>
-          <div className="flex items-center justify-between mb-4"><span className="font-display text-lg">{existing ? "Edit goal" : "New goal"}</span><button onClick={onClose}><X size={16} className="text-faint" /></button></div>
+          <div className="flex items-center justify-between mb-4"><span className="font-display text-lg">{existing ? "Edit goal" : "New goal"}</span><button onClick={onClose} className="icon-btn -mr-1" aria-label="Close"><X size={16} className="text-faint" /></button></div>
           <FieldLabel>Title</FieldLabel>
           <input autoFocus className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What are you working toward?" />
           <div className="h-3" />

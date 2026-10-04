@@ -49,7 +49,7 @@ export default function HealthView({ state, actions }: { state: LifeOSState; act
             <div className="surface rounded-xl p-4 min-w-0">
               <div className="flex gap-1.5 mb-4 flex-wrap">
                 {HEALTH_METRICS.map((m) => (
-                  <button key={m.key} onClick={() => setMetric(m.key)} className="chip"
+                  <button key={m.key} onClick={() => setMetric(m.key)} className="chip max-md:py-2.5 max-md:px-2.5"
                     style={{ background: metric === m.key ? "var(--health)" : "transparent", color: metric === m.key ? "var(--accent-ink)" : "var(--ink-dim)", borderColor: metric === m.key ? "var(--health)" : "var(--line-strong)" }}>
                     <m.icon size={11} /> {m.label}
                   </button>
@@ -89,15 +89,17 @@ export default function HealthView({ state, actions }: { state: LifeOSState; act
             <div className="font-mono text-[10px] text-faint tracking-wide mb-3">RECENT ENTRIES</div>
             <div className="space-y-0.5">
               {[...state.healthLogs].slice(-10).reverse().map((l) => (
-                <div key={l.date} className="row-hover flex items-center gap-2.5 px-2 py-2 rounded-lg">
-                  <span className="font-mono text-[11px] text-faint w-20 flex-shrink-0">{fmtShort(l.date)}</span>
-                  <span className="text-xs text-dim flex-1 min-w-0 truncate">
-                    {l.sleep ?? 0}h sleep · {l.exerciseMin ?? 0}m active · {(l.steps ?? 0).toLocaleString()} steps
-                  </span>
-                  <button onClick={() => setEditingDate(l.date)} className="text-faint hover:text-ink p-1 flex-shrink-0" aria-label="Edit entry">
+                <div key={l.date} className="row-hover flex items-center gap-1 md:gap-2.5 px-2 py-2 rounded-lg">
+                  <div className="flex-1 min-w-0 flex flex-col gap-0.5 md:flex-row md:items-center md:gap-2.5">
+                    <span className="font-mono text-[11px] text-faint md:w-20 flex-shrink-0">{fmtShort(l.date)}</span>
+                    <span className="text-xs text-dim min-w-0 md:flex-1 md:truncate">
+                      {l.sleep ?? 0}h sleep · {l.exerciseMin ?? 0}m active · {(l.steps ?? 0).toLocaleString()} steps
+                    </span>
+                  </div>
+                  <button onClick={() => setEditingDate(l.date)} className="icon-btn text-faint hover:text-ink p-1" aria-label="Edit entry">
                     <Pencil size={13} />
                   </button>
-                  <button onClick={() => setDeleteTarget(l.date)} className="text-faint hover:text-ink p-1 flex-shrink-0" aria-label="Delete entry">
+                  <button onClick={() => setDeleteTarget(l.date)} className="icon-btn text-faint hover:text-ink p-1" aria-label="Delete entry">
                     <Trash2 size={13} />
                   </button>
                 </div>
@@ -138,7 +140,7 @@ function LogHealthModal({
         <div className="modal-panel surface rounded-2xl p-5 w-full max-w-[420px]" onMouseDown={(e) => e.stopPropagation()} style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.25)" }}>
           <div className="flex items-center justify-between mb-4">
             <span className="font-display text-lg">{editingDate ? "Edit entry" : "Log entry"}</span>
-            <button onClick={onClose} className="text-faint hover:text-ink"><X size={16} /></button>
+            <button onClick={onClose} className="icon-btn -mr-1 text-faint hover:text-ink" aria-label="Close"><X size={16} /></button>
           </div>
           <div className="mb-3">
             <FieldLabel>Date</FieldLabel>
