@@ -121,7 +121,7 @@ export default function AccountPage({
 
                 <div>
                   <FieldLabel>Username</FieldLabel>
-                  <input className={inputCls} value={username} onChange={(e) => setUsername(e.target.value)} placeholder="e.g. arnav" />
+                  <input className={inputCls} value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Your username" />
                   <p className="text-[10px] text-faint mt-1">3–20 characters, must be unique.</p>
                 </div>
 
