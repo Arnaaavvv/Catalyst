@@ -25,7 +25,7 @@ Sign up, and your Today view, Goals map, and Academics module are ready to go �
 
 - **📅 Today view** — a single daily surface: tasks due, habits to check off, and what's linked to what
 - **🌌 Goals constellation map** — goals rendered as a node graph, band heights scaled to how many habits/tasks actually feed each one, so nothing collides regardless of how lopsided your goals are
-- **⚡ Quick Add** — type a sentence, Gemini parses it into a typed task/habit/event; falls back to a local regex parser if no API key is set, so it never just breaks
+- **⚡ Quick Add** — type a sentence and it is parse into a typed task/habit/event
 - **📈 Life Pulse & Momentum Dials** — rolling visualizations of how health, habits, and goals are trending, not just static snapshots
 - **🎓 Academics** — subjects, assignments, and grades live in the same data model as everything else
 - **🌗 Dark mode** — applied at the document root with a blocking anti-flash script, so there's no light-mode flash on load
